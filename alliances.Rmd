@@ -1,0 +1,17 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Load Packages
+
+```{r}
+pacman::p_load(tidyverse, haven)
+```
+
+# Load Alliances
+
+```{r}
+read_csv("data/alliance_v4.1_by_dyad_yearly.csv")
+```
+
