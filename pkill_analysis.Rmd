@@ -51,20 +51,102 @@ vdem %>%
 ```
 
 ```{r}
-alliances <- readr::read_csv("data/API_MS.MIL.XPRT.KD_DS2_en_csv_v2.csv")
-glimpse(alliances)
+library(RCurl)
+url <- "http://armstrade.sipri.org/armstrade/html/export_trade_register.php"
+armstrades <- postForm(
+  url,
+  low_year = "1950",
+  high_year = "2016", 
+  seller_country_code = "USA NATO RUS USR CHI",
+  buyer_country_code = "",
+  armament_category_id = "any",
+  buyers_or_sellers = "sellers",
+  filetype = "csv",
+  include_open_deals = "on",
+  sum_deliveries = "on",
+  Submit4 = "Download"
+  ) %>% 
+  readr::read_csv()
 
-max(alliances$year)
-#table(alliances$)
-#%>% 
-  filter(year > 1900)
-  
-Lines <- readLines("data/Trade-Register-1950-2016.rtf")
-Lines[1:100]
-
-# devtools::install_github("kota7/striprtf")
-library(striprtf)
-
+save(armstrades, file = "data/armstrades.Rdata")
 ```
+
+
+```{r}
+table(armstrades$seller)
+armstrades %>%
+  filter(seller == "United States") %>%
+  group_by(ldat) %>%
+  summarise(mtiv = mean(tivdel, rm.na = T)) %>%
+  filter(ldat != 0) %>%
+  ggplot(aes(ldat, mtiv)) +
+  geom_line()
+
+armstrades %>%
+  filter(seller == "United States" & ldat == 1998) 
+
+armstrades %>%
+  select(buyer, seller, ldat, tivdel) %>%
+  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
+  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  rename(year = ldat, tiv = tivdel) %>%
+  filter(year != 0) %>%
+  group_by(year, seller) %>%
+  summarise(mtiv = sum(tiv, rm.na = T)) %>%
+  ggplot(aes(year, mtiv, colour = seller)) +
+  geom_line() 
+
+armstrades %>%
+  select(buyer, seller, ldat, tivdel) %>%
+  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
+  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  rename(year = ldat, tiv = tivdel) %>%
+  filter(year != 0) %>%
+  group_by(seller, buyer) %>%
+  summarise(mtiv = sum(tiv, rm.na = T)) %>%
+  top_n(n = 7) %>%
+  arrange(desc(mtiv)) %>%
+  ggplot(aes(buyer, mtiv)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~seller, scales = "free") +
+  coord_flip()
+  
+armstrades %>%
+  select(buyer, seller, ldat, tivdel) %>%
+  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
+  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  rename(year = ldat, tiv = tivdel) %>%
+  mutate(year_91 = ifelse(year > 1991, 1, 0)) %>%
+  filter(year != 0) %>%
+  group_by(year_91, seller, buyer) %>%
+  summarise(mtiv = sum(tiv, rm.na = T)) %>%
+  top_n(n = 7) %>%
+  arrange(desc(mtiv)) %>%
+  ggplot(aes(buyer, mtiv)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~seller + year_91, scales = "free", ncol = 2) +
+  coord_flip()
+```
+
+```{r}
+nn <- armstrades %>%
+  select(buyer, seller, ldat, tivdel) %>%
+  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
+  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  rename(year = ldat, tiv = tivdel) %>%
+  filter(year != 0) %>%
+  group_by(seller, buyer, year) %>%
+  summarise(mtiv = sum(tiv, rm.na = T)) %>%
+  ungroup() %>%
+  tidyr::spread(seller, mtiv)
+
+table(nn$buyer)
+
+n1 <- nn %>%
+  mutate(buyer = countrycode::countrycode(buyer, origin = "country.name", destination = "country.name")) %>%
+  filter(!is.na(buyer))
+```
+
+
 
 
