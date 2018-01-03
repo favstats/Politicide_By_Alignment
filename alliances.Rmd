@@ -28,11 +28,11 @@ armstrades <- postForm("http://armstrade.sipri.org/armstrade/html/export_trade_r
                    buyer_country_code = "",
                    armament_category_id = "any",
                    buyers_or_sellers = "sellers",
-                   filetype = "csv",
-                   include_open_deals = "on",
-                   sum_deliveries = "on",
-                   Submit4 = "Download") %>% read_csv()
+                   filetype = "csv", 
+                   include_open_deals = "on", 
+                   sum_deliveries = "on", 
+                   Submit4 = "Download") %>% read_csv() 
 
-save(armstrades, file = "data/armstrades.csv")
+save(armstrades, file = "data/armstrades.Rdata ")
 ```
 
