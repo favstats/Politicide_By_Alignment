@@ -1,0 +1,56 @@
+---
+title: "V-dem analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Packages
+```{r}
+pacman::p_load(dplyr, haven, stringr, ggplot2)
+```
+
+# Load Data
+
+```{r}
+dir()
+dir("data")
+file <- "data/Country_Year_V-Dem_SPSS_v7.1/V-Dem-DS-CY-v7.1.sav"
+vdem_spss <- haven::read_sav(file)
+
+load("data/vdems_start.Rdata")
+dir("data")
+
+#glimpse(vdem_spss)
+vdem <- vdems_start %>%
+  select(country_name, country_id, country_text_id, year, v2clkill, e_regionpol) %>%
+  rename(
+    cname = country_name, 
+    cid = country_id, 
+    ctid = country_text_id,
+    pkill = v2clkill,
+    pregion = e_regionpol
+  )
+
+glimpse(vdem)
+
+vdem %>%
+  group_by(year) %>%
+  summarise(mkill = mean(pkill, na.rm = T)) %>%
+  ggplot(aes(year, mkill)) +
+  geom_line()
+
+vdem %>%
+  #filter(cname %in% c("Germany", "Syria")) %>%
+  group_by(pregion, year) %>%
+  summarise(mkill = mean(pkill, na.rm = T)) %>%
+  ggplot(aes(year, mkill, colour = as.factor(pregion))) +
+  geom_line() +
+  geom_smooth(method = "lm", color = "red")
+  theme(legend.position = "bottom")
+```
+
+
+
