@@ -14,4 +14,3 @@ pacman::p_load(tidyverse, haven)
 ```{r}
 read_csv("data/alliance_v4.1_by_dyad_yearly.csv")
 ```
-
