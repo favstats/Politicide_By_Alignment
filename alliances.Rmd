@@ -35,4 +35,3 @@ armstrades <- postForm("http://armstrade.sipri.org/armstrade/html/export_trade_r
 
 save(armstrades, file = "data/armstrades.Rdata ")
 ```
-
