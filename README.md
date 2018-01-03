@@ -30,7 +30,7 @@ So we ended up scraping the military trade register from the **SIPRI Arms Transf
 
 We used the following code to create our dataset:
 
-```
+```{r}
 armstrades <- postForm("http://armstrade.sipri.org/armstrade/html/export_trade_register.php",
                    low_year = "1950",
                    high_year = "2016", 
@@ -48,7 +48,7 @@ save(armstrades, file = "data/armstrades.Rdata")
 
 This includes data from: 
 
-**Western Countries (by vdem data `e_regionpol`)**
+**Western Countries (by vdem variable `e_regionpol`)**
 
 - Australia 
 - Austria 
@@ -73,7 +73,7 @@ This includes data from:
 - Sweden 
 - United States of America
 
-** Comparison Countries **
+**Comparison Countries**
 
 - Soviet Union/Russia
 - China
