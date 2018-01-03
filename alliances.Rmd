@@ -3,15 +3,36 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+### no rebel groups that might be funded by state organizers
+
 # Load Packages
 
 ```{r}
-pacman::p_load(tidyverse, haven)
+pacman::p_load(tidyverse, haven, RCurl)
 ```
 
 # Load Alliances
 
 ```{r}
-read_csv("data/alliance_v4.1_by_dyad_yearly.csv")
+#alliances <- read_csv("data/alliance_v4.1_by_dyad_yearly.csv")
+
+#table(alliances)
+```
+
+
+```{r}
+armstrades <- postForm("http://armstrade.sipri.org/armstrade/html/export_trade_register.php",
+                   low_year = "1950",
+                   high_year = "2016", 
+                   seller_country_code = "USA NATO RUS USR CHI",
+                   buyer_country_code = "",
+                   armament_category_id = "any",
+                   buyers_or_sellers = "sellers",
+                   filetype = "csv",
+                   include_open_deals = "on",
+                   sum_deliveries = "on",
+                   Submit4 = "Download") %>% read_csv()
+
+save(armstrades, file = "data/armstrades.csv")
 ```
 
