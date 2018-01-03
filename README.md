@@ -4,7 +4,7 @@ Hello Everybody!
 
 Welcome to this data project to visualize *politicide* by Alignment!
 
-So today, @systats and I stumbled upon a Tweet with a pretty interesting **idea**.
+So today, [@systats](https://github.com/systats) and I stumbled upon a Tweet with a pretty interesting **idea**.
 
 ![](images/max_fisher_tweet1.png)
 

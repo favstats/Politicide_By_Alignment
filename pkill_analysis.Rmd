@@ -9,15 +9,19 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Packages
 ```{r}
-pacman::p_load(dplyr, haven, stringr, ggplot2)
+#pacman::p_install_gh("hrbrmstr/streamgraph")
+
+pacman::p_load(dplyr, haven, stringr, ggplot2, streamgraph)
 ```
 
-# Load Data
+# Load and Prep Data
+
+## V-Dem Data
 
 ```{r}
 load(url("https://github.com/favstats/database_delib/raw/master/vdems_start.Rdata"))
 
-#glimpse(vdem_spss)
+# preparing vdem data
 vdem <- vdems_start %>%
   select(
     country_name, country_id, 
@@ -34,6 +38,12 @@ vdem <- vdems_start %>%
 
 glimpse(vdem)
 
+```
+
+
+#### some visualizations
+
+```{r}
 vdem %>%
   group_by(year) %>%
   summarise(mkill = mean(pkill, na.rm = T)) %>%
@@ -49,6 +59,8 @@ vdem %>%
   geom_smooth(method = "lm", color = "red")
   theme(legend.position = "bottom")
 ```
+
+## Armstrades
 
 ```{r}
 library(RCurl)
@@ -71,6 +83,7 @@ armstrades <- postForm(
 save(armstrades, file = "data/armstrades.Rdata")
 ```
 
+### Data prep
 
 ```{r}
 load("data/armstrades.Rdata")
@@ -85,6 +98,12 @@ armstrades <- armstrades %>%
   mutate(alliance = ifelse(alliance %in% c("Soviet Union", "Russia"), "Russia", alliance))
 
 table(armstrades$alliance)
+
+```
+
+### some visualizations
+
+```{r}
 
 # sum over all by year
 armstrades %>%
@@ -108,7 +127,6 @@ armstrades %>%
 # major recipients of weapons by seller
 armstrades %>%
   select(buyer, alliance, ldat, tivdel) %>%
-
   rename(year = ldat, tiv = tivdel) %>%
   filter(year != 0) %>%
   group_by(alliance, buyer) %>%
@@ -136,6 +154,8 @@ armstrades %>%
   coord_flip()
 ```
 
+# merging
+
 ```{r}
 nonstates <- data.frame(buyer = c("African Union**", "ANC (South Africa)*",
   "Anti-Castro rebels (Cuba)*", "Armas (Guatemala)*", 
@@ -146,15 +166,16 @@ nonstates <- data.frame(buyer = c("African Union**", "ANC (South Africa)*",
   "UNITA (Angola)*", "United Nations**", "Unknown recipient(s)",
   "Viet Cong (South Vietnam)*", "Viet Minh (France)*", "ZAPU (Zimbabwe)*"))
 
-western <- data.frame(buyer = c("Australia", "Austria", "Belgium", "Canada", "Switzerland", 
+states <- data.frame(buyer = c("Australia", "Austria", "Belgium", "Canada", "Switzerland", 
 "Cyprus", "Germany", "Denmark", "Spain", "Finland", "France", 
 "United Kingdom of Great Britain and Northern Ireland", "Greece", 
 "Ireland", "Iceland", "Italy", "Netherlands", "Norway", "New Zealand", 
 "Portugal", "Sweden",  "United States", "United Kingdom", "Russia"))
 
+# prep armstrades for merging
 nn <- armstrades %>%
   anti_join(nonstates, "buyer") %>%
-  anti_join(western, "buyer") %>%
+  anti_join(states, "buyer") %>%
   select(ldat, tivdel, buyer, seller, alliance) %>%
   rename(year = ldat, tiv = tivdel) %>%
   filter(year != 0) %>%
@@ -168,16 +189,20 @@ nn <- armstrades %>%
   mutate(year = as.character(year))
 nn
 
+# prep vdem for merging
 nn2 <- vdem %>%
   mutate(year = as.character(year)) %>%
   mutate(cname = countrycode::countrycode(cname, origin = "country.name", destination = "country.name")) %>%
-  left_join(nn, by = c("cname", "year"))
+  left_join(nn, by = c("cname", "year")) %>% 
+  anti_join(states %>% rename(cname = buyer), "cname")
 
 #nn2$China[is.na(nn2$China)] <- 0
 #nn2$Russia[is.na(nn2$Russia)] <- 0
 #nn2$West[is.na(nn2$West)] <- 0
+table(nn2$cname)
 ```
 
+# Visualizations
 
 ```{r}
 # 1: Eastern Europe and Central Asia (post-Communist; including Mongolia) 
@@ -192,12 +217,14 @@ nn2 <- vdem %>%
 # 9: The Pacific (excluding Australia and New Zealand; see 5)
 # 10: The Caribbean (including Belize, Haiti, Guyana and Suriname) 
 
+# western countries string
 west <- nn2 %>%
   filter(pregion == 5) %>%
   .[["cname"]] %>%
   unique() %>%
   dput
 
+# boring chart of total sum of weapon export
 nn2 %>%
   # filter(pregion == 3) %>%
   select(West, Russia, cname, year) %>%
@@ -210,8 +237,7 @@ nn2 %>%
   xlim(1950, 2016) 
   #facet_wrap(~seller)
 
-
-library(streamgraph)
+# streamgraph
  armstrades %>%
   anti_join(nonstates, "buyer") %>%
   anti_join(western, "buyer") %>%
@@ -233,26 +259,23 @@ library(streamgraph)
   sg_axis_x(tick_format="d") %>%
   sg_fill_tableau("PuOr")
 
-nn2$pregion %>% sjmisc::to_label()
-vdem %>% names
 
-
+# scatterplot for western countries
 nn2 %>% 
   filter(West > 1) %>%
   ggplot(aes(West, pkill)) +
   geom_point()+
   geom_smooth()
 
-
+# scatterplot for russia
 nn2 %>% 
   filter(Russia > 1) %>%
   ggplot(aes(Russia , pkill)) +
   geom_point() +
   geom_smooth()
 
-nn2 %>%
-  select()
 
+# create percentages and alignment dummy
 nn3 <- nn2 %>% 
   filter(year >= 1950) %>%
   select(cname, Russia, West, year) %>%
@@ -269,18 +292,23 @@ nn3 <- nn2 %>%
   mutate(perc_w = ctiv_w / sum(ctiv_w)) %>%
   mutate(affil = case_when(
     perc_r > perc_w ~ "Russian",
-    perc_w > perc_r ~ "Western"
+    perc_w > perc_r ~ "Western",
+#    perc_r > 0.05 & perc_w < 0.01 ~ "Russian",
+#    perc_w > 0.05 & perc_r < 0.01 ~ "Western",
+    TRUE ~ NA_character_
     )
   ) %>%
   ungroup() %>%
   left_join(nn2 %>% select(cname, year, pkill))
 
 
-
+# violingplot
 nn3 %>%
  ggplot(aes(affil, pkill)) +
- geom_violin()
+ geom_violin() +
+ geom_boxplot(size = 0.5)
 
+#scatterplot together
 nn3 %>%
  mutate(perc_all = ifelse(affil == "Russian", perc_r, perc_w)) %>%
  ggplot(aes(perc_all, pkill, colour = affil)) +
@@ -288,26 +316,33 @@ nn3 %>%
  geom_smooth(method = "lm")
 
 
+# scatterplot together by percentage
 nn3 %>%
 filter(!is.na(affil)) %>%
  mutate(perc_all = ifelse(affil == "Russian", perc_r, perc_w), year = as.numeric(year)) %>%
- ggplot(aes(year, pkill, colour = affil, alpha = perc_all, size = perc_all, text  = cname)) +
- geom_jitter() 
+ ggplot(aes(year, pkill, 
+            colour = affil, group = affil, 
+            alpha = perc_all, size = perc_all, text = cname)) +
+ geom_point() +
+ geom_smooth(method = "loess", se = F) +
+ ggthemes::scale_colour_fivethirtyeight() +
+ ggthemes::theme_fivethirtyeight()
 
 plotly::ggplotly()
 
 # geom_smooth(method = "lm")
 
 
-table(nn2$cname)
 
 nn2 %>% 
   filter(cname %in% c("Turkey")) %>%
-  ggplot(aes(as.numeric(year), US)) +
+  ggplot(aes(as.numeric(year), perc_all)) +
   geom_point() +
   geom_smooth() +
   theme(legend.position = "none") +
   xlim(1950, 2016)
+
+table(nn3$affil)
 ```
 
 
