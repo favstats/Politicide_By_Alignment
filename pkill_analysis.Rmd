@@ -73,80 +73,242 @@ save(armstrades, file = "data/armstrades.Rdata")
 
 
 ```{r}
-table(armstrades$seller)
+load("data/armstrades.Rdata")
+#table(armstrades$seller)
+armstrades <- armstrades %>%
+  filter(seller != "China") %>%
+  mutate(alliance = ifelse(seller %in% c("Australia", "Austria", "Belgium", "Canada", "Switzerland", 
+"Cyprus", "Germany", "Denmark", "Spain", "Finland", "France", 
+"United Kingdom of Great Britain and Northern Ireland", "Greece", 
+"Ireland", "Iceland", "Italy", "Netherlands", "Norway", "New Zealand", 
+"Portugal", "Sweden",  "United States", "United Kingdom"), "West", seller)) %>%
+  mutate(alliance = ifelse(alliance %in% c("Soviet Union", "Russia"), "Russia", alliance))
+
+table(armstrades$alliance)
+
+# sum over all by year
 armstrades %>%
   filter(seller == "United States") %>%
   group_by(ldat) %>%
-  summarise(mtiv = mean(tivdel, rm.na = T)) %>%
+  summarise(mtiv = sum(tivdel, rm.na = T)) %>%
   filter(ldat != 0) %>%
   ggplot(aes(ldat, mtiv)) +
   geom_line()
 
+# sum by alliances and year
 armstrades %>%
-  filter(seller == "United States" & ldat == 1998) 
-
-armstrades %>%
-  select(buyer, seller, ldat, tivdel) %>%
-  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
-  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  select(alliance, ldat, tivdel) %>%
   rename(year = ldat, tiv = tivdel) %>%
   filter(year != 0) %>%
-  group_by(year, seller) %>%
+  group_by(year, alliance) %>%
   summarise(mtiv = sum(tiv, rm.na = T)) %>%
-  ggplot(aes(year, mtiv, colour = seller)) +
+  ggplot(aes(year, mtiv, colour = alliance)) +
   geom_line() 
 
+# major recipients of weapons by seller
 armstrades %>%
-  select(buyer, seller, ldat, tivdel) %>%
-  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
-  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  select(buyer, alliance, ldat, tivdel) %>%
+
   rename(year = ldat, tiv = tivdel) %>%
   filter(year != 0) %>%
-  group_by(seller, buyer) %>%
+  group_by(alliance, buyer) %>%
   summarise(mtiv = sum(tiv, rm.na = T)) %>%
   top_n(n = 7) %>%
   arrange(desc(mtiv)) %>%
   ggplot(aes(buyer, mtiv)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~seller, scales = "free") +
+  facet_wrap(~alliance, scales = "free") +
   coord_flip()
-  
+
+# major recipients of weapons by seller and perio dummy
 armstrades %>%
-  select(buyer, seller, ldat, tivdel) %>%
-  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
-  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  select(alliance, buyer, ldat, tivdel) %>%
   rename(year = ldat, tiv = tivdel) %>%
   mutate(year_91 = ifelse(year > 1991, 1, 0)) %>%
   filter(year != 0) %>%
-  group_by(year_91, seller, buyer) %>%
+  group_by(year_91, alliance, buyer) %>%
   summarise(mtiv = sum(tiv, rm.na = T)) %>%
   top_n(n = 7) %>%
   arrange(desc(mtiv)) %>%
   ggplot(aes(buyer, mtiv)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~seller + year_91, scales = "free", ncol = 2) +
+  facet_wrap(~alliance + year_91, scales = "free", ncol = 2) +
   coord_flip()
 ```
 
 ```{r}
+nonstates <- data.frame(buyer = c("African Union**", "ANC (South Africa)*",
+  "Anti-Castro rebels (Cuba)*", "Armas (Guatemala)*", 
+  "Contras (Nicaragua)*", "FNLA (Angola)*", "Haiti rebels*",
+  "Indonesia rebels*", "Khmer Rouge (Cambodia)*", "Mujahedin (Afghanistan)*", 
+  "NATO**", "Northern Alliance (Afghanistan)*", "Pathet Lao (Laos)*", 
+  "PLO (Israel)*", "Regional Security System**", "Ukraine Rebels*",
+  "UNITA (Angola)*", "United Nations**", "Unknown recipient(s)",
+  "Viet Cong (South Vietnam)*", "Viet Minh (France)*", "ZAPU (Zimbabwe)*"))
+
+western <- data.frame(buyer = c("Australia", "Austria", "Belgium", "Canada", "Switzerland", 
+"Cyprus", "Germany", "Denmark", "Spain", "Finland", "France", 
+"United Kingdom of Great Britain and Northern Ireland", "Greece", 
+"Ireland", "Iceland", "Italy", "Netherlands", "Norway", "New Zealand", 
+"Portugal", "Sweden",  "United States", "United Kingdom", "Russia"))
+
 nn <- armstrades %>%
-  select(buyer, seller, ldat, tivdel) %>%
-  mutate(seller = ifelse(seller %in% "Soviet Union", "Soviet Union/Russia", seller)) %>%
-  mutate(seller = ifelse(seller %in% "Russia", "Soviet Union/Russia", seller)) %>%
+  anti_join(nonstates, "buyer") %>%
+  anti_join(western, "buyer") %>%
+  select(ldat, tivdel, buyer, seller, alliance) %>%
   rename(year = ldat, tiv = tivdel) %>%
   filter(year != 0) %>%
-  group_by(seller, buyer, year) %>%
+  group_by(alliance, buyer, year) %>%
   summarise(mtiv = sum(tiv, rm.na = T)) %>%
   ungroup() %>%
-  tidyr::spread(seller, mtiv)
-
-table(nn$buyer)
-
-n1 <- nn %>%
+  filter(!is.na(buyer)) %>%
+  tidyr::spread(alliance, mtiv) %>%
   mutate(buyer = countrycode::countrycode(buyer, origin = "country.name", destination = "country.name")) %>%
-  filter(!is.na(buyer))
+  rename(cname = buyer) %>%
+  mutate(year = as.character(year))
+nn
+
+nn2 <- vdem %>%
+  mutate(year = as.character(year)) %>%
+  mutate(cname = countrycode::countrycode(cname, origin = "country.name", destination = "country.name")) %>%
+  left_join(nn, by = c("cname", "year"))
+
+#nn2$China[is.na(nn2$China)] <- 0
+#nn2$Russia[is.na(nn2$Russia)] <- 0
+#nn2$West[is.na(nn2$West)] <- 0
 ```
 
+
+```{r}
+# 1: Eastern Europe and Central Asia (post-Communist; including Mongolia) 
+# 2: Latin America (including Cuba and the Dominican Republic)
+# 3: The Middle East and North Africa/MENA (including Israel and Turkey)
+# 4: Sub-Saharan Africa
+# 5: Western Europe and North America (including Cyprus, Australia and New 
+# Zealand)
+# 6: East Asia
+# 7: South-East Asia
+# 8: South Asia
+# 9: The Pacific (excluding Australia and New Zealand; see 5)
+# 10: The Caribbean (including Belize, Haiti, Guyana and Suriname) 
+
+west <- nn2 %>%
+  filter(pregion == 5) %>%
+  .[["cname"]] %>%
+  unique() %>%
+  dput
+
+nn2 %>%
+  # filter(pregion == 3) %>%
+  select(West, Russia, cname, year) %>%
+  tidyr::gather("seller", "tiv", -cname, -year) %>%
+ #filter(cname %in% c("Germany")) %>%
+  ggplot(aes(as.numeric(year), tiv, colour = seller)) +
+  geom_point() +
+  geom_smooth() +
+  #theme(legend.position = "none") +
+  xlim(1950, 2016) 
+  #facet_wrap(~seller)
+
+
+library(streamgraph)
+ armstrades %>%
+  anti_join(nonstates, "buyer") %>%
+  anti_join(western, "buyer") %>%
+  select(ldat, tivdel, alliance) %>%
+  rename(year = ldat, tiv = tivdel) %>%
+  filter(year != 0) %>%
+  group_by(alliance, year) %>%
+  summarise(mtiv = sum(tiv, rm.na = T)) %>%
+  ungroup() %>%
+  filter(!is.na(alliance)) %>%
+  filter(year > 1950) %>%
+  streamgraph(
+    key = "alliance", 
+    value = "mtiv", 
+    date = "year", 
+    #interactive = T
+    scale = "continuous"
+  ) %>% 
+  sg_axis_x(tick_format="d") %>%
+  sg_fill_tableau("PuOr")
+
+nn2$pregion %>% sjmisc::to_label()
+vdem %>% names
+
+
+nn2 %>% 
+  filter(West > 1) %>%
+  ggplot(aes(West, pkill)) +
+  geom_point()+
+  geom_smooth()
+
+
+nn2 %>% 
+  filter(Russia > 1) %>%
+  ggplot(aes(Russia , pkill)) +
+  geom_point() +
+  geom_smooth()
+
+nn2 %>%
+  select()
+
+nn3 <- nn2 %>% 
+  filter(year >= 1950) %>%
+  select(cname, Russia, West, year) %>%
+  group_by(cname, year) %>%
+  summarise(
+    ctiv_r = sum(Russia, rm.ma = T),
+    ctiv_w = sum(West, rm.ma = T)
+  ) %>%
+  mutate(ctiv_r = ifelse(is.na(ctiv_r), 0, ctiv_r)) %>%
+  mutate(ctiv_w = ifelse(is.na(ctiv_w), 0, ctiv_w)) %>%
+  ungroup() %>%
+  group_by(year) %>%
+  mutate(perc_r = ctiv_r / sum(ctiv_r)) %>%
+  mutate(perc_w = ctiv_w / sum(ctiv_w)) %>%
+  mutate(affil = case_when(
+    perc_r > perc_w ~ "Russian",
+    perc_w > perc_r ~ "Western"
+    )
+  ) %>%
+  ungroup() %>%
+  left_join(nn2 %>% select(cname, year, pkill))
+
+
+
+nn3 %>%
+ ggplot(aes(affil, pkill)) +
+ geom_violin()
+
+nn3 %>%
+ mutate(perc_all = ifelse(affil == "Russian", perc_r, perc_w)) %>%
+ ggplot(aes(perc_all, pkill, colour = affil)) +
+ geom_point() +
+ geom_smooth(method = "lm")
+
+
+nn3 %>%
+filter(!is.na(affil)) %>%
+ mutate(perc_all = ifelse(affil == "Russian", perc_r, perc_w), year = as.numeric(year)) %>%
+ ggplot(aes(year, pkill, colour = affil, alpha = perc_all, size = perc_all, text  = cname)) +
+ geom_jitter() 
+
+plotly::ggplotly()
+
+# geom_smooth(method = "lm")
+
+
+table(nn2$cname)
+
+nn2 %>% 
+  filter(cname %in% c("Turkey")) %>%
+  ggplot(aes(as.numeric(year), US)) +
+  geom_point() +
+  geom_smooth() +
+  theme(legend.position = "none") +
+  xlim(1950, 2016)
+```
 
 
 
