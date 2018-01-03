@@ -10,8 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 # Packages
 ```{r}
 #pacman::p_install_gh("hrbrmstr/streamgraph")
+#pacman::p_install_gh("cttobin/ggthemr")
 
-pacman::p_load(dplyr, haven, stringr, ggplot2, streamgraph)
+
+pacman::p_load(dplyr, haven, stringr, ggplot2, streamgraph, ggthemr, ggrepel)
 ```
 
 # Load and Prep Data
@@ -63,24 +65,24 @@ vdem %>%
 ## Armstrades
 
 ```{r}
-library(RCurl)
-url <- "http://armstrade.sipri.org/armstrade/html/export_trade_register.php"
-armstrades <- postForm(
-  url,
-  low_year = "1950",
-  high_year = "2016", 
-  seller_country_code = "USA NATO RUS USR CHI",
-  buyer_country_code = "",
-  armament_category_id = "any",
-  buyers_or_sellers = "sellers",
-  filetype = "csv",
-  include_open_deals = "on",
-  sum_deliveries = "on",
-  Submit4 = "Download"
-  ) %>% 
-  readr::read_csv()
-
-save(armstrades, file = "data/armstrades.Rdata")
+# library(RCurl)
+# url <- "http://armstrade.sipri.org/armstrade/html/export_trade_register.php"
+# armstrades <- postForm(
+#   url,
+#   low_year = "1950",
+#   high_year = "2016", 
+#   seller_country_code = "USA NATO RUS USR CHI",
+#   buyer_country_code = "",
+#   armament_category_id = "any",
+#   buyers_or_sellers = "sellers",
+#   filetype = "csv",
+#   include_open_deals = "on",
+#   sum_deliveries = "on",
+#   Submit4 = "Download"
+#   ) %>% 
+#   readr::read_csv()
+# 
+# save(armstrades, file = "data/armstrades.Rdata")
 ```
 
 ### Data prep
@@ -240,7 +242,7 @@ nn2 %>%
 # streamgraph
  armstrades %>%
   anti_join(nonstates, "buyer") %>%
-  anti_join(western, "buyer") %>%
+  anti_join(states, "buyer") %>%
   select(ldat, tivdel, alliance) %>%
   rename(year = ldat, tiv = tivdel) %>%
   filter(year != 0) %>%
@@ -291,10 +293,10 @@ nn3 <- nn2 %>%
   mutate(perc_r = ctiv_r / sum(ctiv_r)) %>%
   mutate(perc_w = ctiv_w / sum(ctiv_w)) %>%
   mutate(affil = case_when(
-    perc_r > perc_w ~ "Russian",
-    perc_w > perc_r ~ "Western",
-#    perc_r > 0.05 & perc_w < 0.01 ~ "Russian",
-#    perc_w > 0.05 & perc_r < 0.01 ~ "Western",
+#    perc_r > perc_w ~ "Russian",
+#    perc_w > perc_r ~ "Western",
+    perc_r > 0.05 & perc_w < 0.01 ~ "Russian",
+    perc_w > 0.05 & perc_r < 0.01 ~ "Western",
     TRUE ~ NA_character_
     )
   ) %>%
@@ -302,7 +304,7 @@ nn3 <- nn2 %>%
   left_join(nn2 %>% select(cname, year, pkill))
 
 
-# violingplot
+# violinplot
 nn3 %>%
  ggplot(aes(affil, pkill)) +
  geom_violin() +
@@ -315,20 +317,83 @@ nn3 %>%
  geom_point() +
  geom_smooth(method = "lm")
 
+range(nn3$pkill)
+
+range01 <- function(x){(x - min(x, na.rm = T)) / (max(x, na.rm = T) - min(x, na.rm = T))}
+
+
+#
+
+nn3 %<>%
+ filter(!is.na(affil)) %>%
+ mutate(perc_all = ifelse(affil == "Russian", perc_r, perc_w), year = as.numeric(year)) %>%
+ mutate(pkill = 4 - (range01(pkill) * 4)) %>% 
+ mutate(cname = case_when(
+  cname == "Democratic People's Republic of Korea" ~ "North Korea",
+  cname == "German Democratic Republic" ~ "East Germany",
+  cname == "Iran (Islamic Republic of)" ~ "Iran",
+  cname == "Lao People's Democratic Republic" ~ "Laos",
+  cname == "Republic of Korea" ~ "South Korea",
+  cname == "Syrian Arab Republic" ~ "Syria",
+  cname == "Taiwan, Province of China" ~ "Taiwan",
+  cname == "Venezuela, Bolivarian Republic of" ~ "Venezuela",
+  cname == "Yemen People's Republic" ~ "Yemen (Socialist)",
+  TRUE ~ cname)
+ ) %>% 
+ mutate(affil = case_when(
+  affil == "Russian" ~ "(Soviet) Russia",
+  affil == "Western" ~ "Western Countries"
+ ))
+
+dput(unique(nn3$cname))
+
+important_cntry <- nn3 %>% 
+  filter(pkill < 1.8 & year >= 2013)
 
 # scatterplot together by percentage
-nn3 %>%
-filter(!is.na(affil)) %>%
- mutate(perc_all = ifelse(affil == "Russian", perc_r, perc_w), year = as.numeric(year)) %>%
+set.seed(2018)
+#
+#plots <- list()
+#for (jj in 111:131) {
+#plots[[jj]] <-  
+over_time <- nn3 %>% 
  ggplot(aes(year, pkill, 
-            colour = affil, group = affil, 
-            alpha = perc_all, size = perc_all, text = cname)) +
+            colour = affil, group = affil, size = perc_all,
+            alpha = perc_all,  text = cname)) +
  geom_point() +
- geom_smooth(method = "loess", se = F) +
- ggthemes::scale_colour_fivethirtyeight() +
- ggthemes::theme_fivethirtyeight()
+ geom_smooth(aes(year, pkill), method = "loess", se = F, show.legend = F) +
+ geom_text_repel( #sample_frac(nn3, 0.25)    seed = 457,4567
+   data = sample_frac(nn3, 0.8) %>% 
+     filter(!duplicated(cname)) %>% 
+     rbind(important_cntry), # filter(nn3, perc_all > 0.15 & pkill > 3), 
+   aes(year, pkill, colour = affil, label = cname),
+   size = 3,
+   seed = 457,
+   inherit.aes = F,
+   box.padding = 0.25,
+   point.padding = 0.3, 
+   show.legend = F) +
+ legend_bottom() + 
+ labs(size = "% of Arms Deals", 
+      alpha = "% of Arms Deals",
+      colour = "Main Seller (over 5%)") +
+guides(text = F, 
+       colour = guide_legend(order = 1, override.aes = list(size = 4)), 
+       size = guide_legend(order = 2), alpha = guide_legend(order = 2)) +
+# viridis::scale_color_viridis(discrete = T, option = "D") +
+ ggthemes::scale_colour_wsj() +
+# ggthemes::scale_fill_hc("darkunica") +
+ ggthemes::theme_hc() +
+ scale_x_continuous(breaks = seq(1950, 2016, 5)) +
+ ylab("Freedom from Political Killings") +
+ xlab("") +
+ ggtitle("Freedom from Political Killings by Time and % of Arms Deals of Main Seller") +
+ labs(caption = paste0("Country Years = \t", nrow(nn3), ". Source: SIPRI Arms Transfers Database and V-Dem Data - Version 7.1")) +
+  theme(plot.caption = element_text(size = 8)) 
+#} 
+#plotly::ggplotly(tooltip = c("text", "size", "x", "y", "group"))
 
-plotly::ggplotly()
+ggsave(over_time, file = "images/over_time.png", height = 6, width = 9)
 
 # geom_smooth(method = "lm")
 
@@ -336,14 +401,45 @@ plotly::ggplotly()
 
 nn2 %>% 
   filter(cname %in% c("Turkey")) %>%
-  ggplot(aes(as.numeric(year), perc_all)) +
+  ggplot(aes(as.numeric(year), perc_r)) +
   geom_point() +
   geom_smooth() +
   theme(legend.position = "none") +
   xlim(1950, 2016)
 
 table(nn3$affil)
+
+duplicated(nn3$cname)
 ```
 
+TL;DR: Regimes that receive weapons from the West are less deadly than those that received weapons from (Soviet) Russia.
 
+So yesterday I read an interesting tweet (first comment), pondering on the idea that regimes that are aligned with the West are more likely to restrain themselves when it comes to dealing with their population while countries that are supported by authoritarian governments (such as Russia) are more likely to commit violence against their population because they don't have to fear to lose their support. 
 
+Since I found this very interesting, I decided to actually take on this challenge and find out what the data tells. It wasn't very easy to measure alignment over time.. so I took data from the Stockholm International Peace Research Institute (SIPRI) on arms trade deals and took that as a measurement for alignment. My idea here was that the more western countries or Russia are exporting weapons to a country, the more likely it is that the buyer is aligned with that country. Admittedly, this seems a bit messy at first but in actuality holds up pretty well. For example, post-Mossadegh Iran until 1979 was aligned with the US and so one can see a lot of weapons trade directed at Iran up until that point.
+
+But enough of that.
+
+What can we see on the chart? 
+
+The x-axis shows the years.
+
+The y-axis shows a measurement for "Freedom from Political Killing" based on estimates on how widespread and systematic government violence is (exact measurement in the comments). Higher values indicate more freedom from political killings. Data is taken from the Varieties of Democracies Dataset (Version 7.1).
+
+The dots represent a country in a specific year. The size of the dot and color intensity show the percentage of total arms value that is exported to that specific country. 
+
+The main seller (red and blue colors) is determined in the following way: if Russia's weapon export value to a certain country exceeds 5% of the total export value in a given year and if the export value is below 1% of US arms exports, Russia is marked as the main seller to that country in that year (and the opposite for identifying western countries as main sellers). This leaves us with 638 individual country years that can be identified as either being primarily served by Russia or Western countries.
+
+The lines are trend lines (loess-curves), showing the average government violence intensity in a given year for countries that mainly receive weapons from the West (blue) or (Soviet) Russia (red).
+ 
+So what tells us the chart?
+
+Well, it's pretty clear on first sight that the upper section of the chart is more filled with countries that receive weapons from the West while the lower section is dominated by countries that receive weapons from (Soviet) Russia. This indicates that, constant over time, regimes that mostly received weapons from (Soviet) Russia have been more violent towards their populations than countries that receive weapons from the West.
+
+So there might actually be something to this theory.
+
+Why should still be skeptical.
+
+Even though the picture here is pretty clear in their trend lines, it is still quite incomplete. The propensity to commit violence against your own population depends on many more factors such as degree of democracy, ethnic or religious divides, economic situation etc. Furthermore, by the nature of the initial question, this chart omits a very important actor when it comes to political violence: non-state actors. None of the many militias that were once employed/paid by either Western countries or (Soviet) Russia are included here and they have of course been very violent if not even more violent tham some political regimes.
+
+Anyway, I hope you enjoyed this little post. Feel free to suggest changes or criticism :)
