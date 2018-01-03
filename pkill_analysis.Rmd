@@ -15,17 +15,15 @@ pacman::p_load(dplyr, haven, stringr, ggplot2)
 # Load Data
 
 ```{r}
-dir()
-dir("data")
-file <- "data/Country_Year_V-Dem_SPSS_v7.1/V-Dem-DS-CY-v7.1.sav"
-vdem_spss <- haven::read_sav(file)
-
-load("data/vdems_start.Rdata")
-dir("data")
+load(url("https://github.com/favstats/database_delib/raw/master/vdems_start.Rdata"))
 
 #glimpse(vdem_spss)
 vdem <- vdems_start %>%
-  select(country_name, country_id, country_text_id, year, v2clkill, e_regionpol) %>%
+  select(
+    country_name, country_id, 
+    country_text_id, year, 
+    v2clkill, e_regionpol
+  ) %>%
   rename(
     cname = country_name, 
     cid = country_id, 
@@ -52,5 +50,21 @@ vdem %>%
   theme(legend.position = "bottom")
 ```
 
+```{r}
+alliances <- readr::read_csv("data/API_MS.MIL.XPRT.KD_DS2_en_csv_v2.csv")
+glimpse(alliances)
+
+max(alliances$year)
+#table(alliances$)
+#%>% 
+  filter(year > 1900)
+  
+Lines <- readLines("data/Trade-Register-1950-2016.rtf")
+Lines[1:100]
+
+# devtools::install_github("kota7/striprtf")
+library(striprtf)
+
+```
 
 
