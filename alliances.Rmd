@@ -24,14 +24,15 @@ pacman::p_load(tidyverse, haven, RCurl)
 armstrades <- postForm("http://armstrade.sipri.org/armstrade/html/export_trade_register.php",
                    low_year = "1950",
                    high_year = "2016", 
-                   seller_country_code = "USA NATO RUS USR CHI",
+                   seller_country_code = "AUS AST BEL CAN SWI CYP FRG DEN SPA FIN FRA UK GRE IRE ICE ITA NET NOR NZ POR SWE USA RUS USR CHI",
                    buyer_country_code = "",
                    armament_category_id = "any",
                    buyers_or_sellers = "sellers",
-                   filetype = "csv",
-                   include_open_deals = "on",
-                   sum_deliveries = "on",
-                   Submit4 = "Download") %>% read_csv()
+                   filetype = "csv", 
+                   include_open_deals = "on", 
+                   sum_deliveries = "on", 
+                   Submit4 = "Download") %>% read_csv() 
 
-save(armstrades, file = "data/armstrades.csv")
+save(armstrades, file = "data/armstrades.Rdata")
+
 ```
