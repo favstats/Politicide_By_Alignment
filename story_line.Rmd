@@ -1,0 +1,200 @@
+---
+title: "Storyboard Commentary"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: cosmo
+---
+
+### Start {data-commentary-width=400}
+
+```{r}
+pacman::p_load(dplyr, haven, stringr, ggplot2)
+```
+
+![](images/max_fisher_tweet1.png)
+
+
+*** 
+
+So yesterday I read an interesting tweet (first comment), pondering on the idea that regimes that are aligned with the West are more likely to restrain themselves when it comes to dealing with their population while countries that are supported by authoritarian governments (such as Russia) are more likely to commit violence against their population because they don't have to fear to lose their support.
+
+
+
+### Frame 2 {data-commentary-width=0}
+
+```{r}
+data(worldgeojson, package = "highcharter")
+load("data/vdem_sub.Rdata")
+
+ds <- vdem %>% 
+  rename(iso3 = ctid) %>%
+  select(year, iso3, pkill) %>%
+  mutate(id = 1:n()) %>%
+  group_by(iso3) %>% 
+  #split(.$id) # from base R
+  do(item = list(
+    iso3 = first(.$iso3),
+    sequence = .$pkill,
+    value = first(.$pkill))
+  ) %>% 
+  .$item
+
+stops <- data.frame(
+  q = 0:5/5,
+  c = viridis::viridis(6, option = "A"),
+  stringsAsFactors = FALSE
+)
+stops <- highcharter::list_parse2(stops)
+
+
+highcharter::highchart(type = "map") %>% 
+  highcharter::hc_add_series(
+    data = ds,
+    name = "drug deaths per 100,000",
+    mapData = worldgeojson,
+    joinBy = "iso3",
+    borderWidth = 0.01
+  ) %>% 
+  #highcharter::hc_colorAxis(stops = highcharter::color_stops()) %>%  
+  highcharter::hc_colorAxis(stops = stops) %>%
+  #highcharter::hc_title(text = "How the Epidemic of Drug Overdose Deaths Ripples") %>%
+  #  highcharter::hc_legend(layout = "vertical", reversed = TRUE,
+  #            floating = TRUE, align = "right") %>% 
+  #  highcharter::hc_add_theme(highcharter::hc_theme_smpl()) %>% 
+  highcharter::hc_motion(
+    enabled = T,
+    axisLabel = "year",
+    labels = sort(unique(vdem$year)),
+    series = 0,
+    updateIterval = 50,
+    magnet = list(
+      round = "floor",
+      step = 0.05
+    )
+  )
+```
+
+
+### Frame 3 {data-commentary-width=200}
+
+```{r}
+load("data/final_data.Rdata")
+nn <- final_data %>%
+  mutate(perc = paste0(round(perc_all*100, 2), " %")) %>%
+  mutate(pkill = round(pkill, 2)) %>%
+  mutate(color = ifelse(affil == "Western Countries", "#1E90FF", "#CD4F39"))
+
+#devtools::install_github("jbkunst/highcharter", force = T)
+library(highcharter)
+
+nn %>%
+  mutate(perc_all = round(perc_all, 2)) %>%
+  highcharter::hchart("point", 
+                      highcharter::hcaes(year, pkill, size = perc_all, color = color, group = color), 
+                      maxSize = "5%",
+                      minSize = "1%",
+                      regression = T,
+                      regressionSettings = list(type = "polynomial", order = 5, hideInLegend = T)) %>% 
+  highcharter::hc_colors(c("#1E90FF", "#CD4F39")) %>% 
+  #highcharter::hc_xAxis(categories = affil) %>%
+  #highcharter::hc_legend(labelFormat = c("HAHA", "HAHA2")) %>% 
+  highcharter::hc_add_dependency("plugins/highcharts-regression.js") %>%
+  highcharter::hc_legend(enabled = F) %>%
+  highcharter::hc_title(text = "Arms Trade by Country and Year") %>% 
+  highcharter::hc_subtitle(text = "Data ...") %>% 
+  #highcharter::hc_tooltip(useHTML = TRUE, headerFormat = "", pointFormat = tltip) %>% 
+  highcharter::hc_tooltip(
+    headerFormat = "<b>Arms Trade</b><br>",
+    pointFormat = "Country: {point.cname} <br>
+    Year: {point.year} <br>
+    Gov. Violence: {point.pkill} <br>
+    Arms Trade (% TIV per Year): {point.perc} <br>
+    Seller: {point.affil}
+    "
+  )
+```
+
+*** 
+
+Some commentary about Frame 2.
+
+### World Map by Arms Deals and Super Power
+
+```{r}
+data(worldgeojson, package = "highcharter")
+load("data/nn23.Rdata")
+#nn23 %>%
+# ggplot(aes(sumperc)) +
+# geom_histogram() +
+# xlim(-.3,.3)
+# 
+# ds %>%
+#   filter(sumperc > 0.8)
+# 
+# nn23$cname %in% states %>% table()
+# 
+# table(nn23$cname) 
+states_norm <- c("AUS", "AUT", "BEL", "CAN", "CHE", "CYP", "DEU", "DNK", "ESP", 
+"FIN", "FRA", "GBR", "GRC", "IRL", "ISL", "ITA", "NLD", "NOR", 
+"NZL", "PRT", "SWE", "USA", "GBR")
+
+ds <- nn23 %>% 
+  #rename(iso3 = ctid) %>%
+  select(year, iso3, cname, sumperc) %>%
+  mutate(id = 1:n()) %>%
+  mutate(
+    sumperc = ifelse(iso3 %in% states_norm, 1, sumperc), 
+    sumperc = ifelse(cname %in% "Russian Federation", -1, sumperc)
+  ) %>%
+  select(-cname) %>%
+  mutate(sumperc = ifelse(sumperc < 0.01 & sumperc > -0.01, 0, sumperc)) %>%
+  group_by(iso3) %>% 
+  #split(.$id) # from base R
+  do(item = list(
+    iso3 = first(.$iso3),
+    sequence = .$sumperc,
+    value = first(.$sumperc))
+  ) %>% 
+  .$item
+
+stops <- data.frame(
+  q = 0:5/5,
+  #c = viridis::viridis(6, option = "A"),
+  c = RColorBrewer::brewer.pal(6, "RdBu"),
+  stringsAsFactors = FALSE
+)
+
+stops <- highcharter::list_parse2(stops)
+
+highcharter::highchart(type = "map") %>% 
+  highcharter::hc_add_series(
+    data = ds,
+    name = "drug deaths per 100,000",
+    mapData = worldgeojson,
+    joinBy = "iso3",
+    borderWidth = 0.01
+  ) %>% 
+  #highcharter::hc_colorAxis(stops = highcharter::color_stops()) %>%  
+  highcharter::hc_colorAxis(stops = stops) %>%
+  #highcharter::hc_title(text = "How the Epidemic of Drug Overdose Deaths Ripples") %>%
+  #  highcharter::hc_legend(layout = "vertical", reversed = TRUE,
+  #            floating = TRUE, align = "right") %>% 
+  #  highcharter::hc_add_theme(highcharter::hc_theme_smpl()) %>% 
+  highcharter::hc_motion(
+    enabled = T,
+    axisLabel = "year",
+    labels = sort(unique(nn23$year)),
+    series = 0,
+    updateIterval = 50,
+    magnet = list(
+      round = "floor",
+      step = 0.01
+    )
+  )
+```
+
+
+### Frame 5
+
+
