@@ -268,10 +268,33 @@ The lines are trend lines (loess-curves), showing the degree of political violen
 
 Some commentary about Frame 2.
 
+### Boxplot {data-commentary-width=560}
+
+```{r}
 
 
-haha
 
+gg2 <- final_data %>% 
+  mutate(cntryear = paste(cname, "-", year)) %>% 
+  #group_by(cname) %>%
+  #summarise(Russia = sum(Russia, na.rm = T), West = sum(West, na.rm = T)) %>%
+  #tidyr::gather("power", "tiv", -cname) %>%
+  ggplot(aes(affil, y = pkill, colour = affil, label = cntryear)) +
+  geom_boxplot(fill = NA) +
+  scale_colour_manual(values = c("#CD4F39", "#1E90FF")) + 
+  geom_jitter(alpha = .3) +
+  labs(x = "", y = "") +
+  theme_classic() +
+  theme(legend.position = "none")
+plotly::ggplotly(gg2)
+
+#highcharter::hcboxplot(x = final_data$pkill, var = final_data$affil) %>%
+  #highcharter::hc_chart(type = "column") %>%
+  #highcharter::hc_chart(type = "point") %>%
+  #highcharter::hc_tooltip(pointFormat = 'n = {point.obs}')
+```
+
+***
 
 FAQ {data-navmenu="Info" data-icon="fa-info-circle"}
 =========================================
