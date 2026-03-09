@@ -919,11 +919,11 @@
         grad.append('stop').attr('offset', '50%').attr('stop-color', '#8b5cf6');
         grad.append('stop').attr('offset', '100%').attr('stop-color', WEST_COLOR);
 
-        // Cold War line
+        // Cold War end line
         const cwX = x(1991);
         g.append('line').attr('x1', cwX).attr('x2', cwX).attr('y1', 0).attr('y2', height)
           .attr('stroke', 'rgba(255,255,255,0.15)').attr('stroke-dasharray', '6,4');
-        g.append('text').attr('x', cwX + 4).attr('y', 14).attr('fill', 'rgba(255,255,255,0.25)').attr('font-size', '11px').text('End of Cold War');
+        g.append('text').attr('x', cwX + 4).attr('y', 14).attr('fill', 'rgba(255,255,255,0.25)').attr('font-size', '11px').text('Cold War ends');
 
         // Lines
         const lineGen = d3.line().curve(d3.curveCatmullRom);
