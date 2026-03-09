@@ -188,55 +188,70 @@
     .era-card .era-val { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; }
     .era-card .era-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
-    /* Story */
-    .story { margin-bottom: 56px; animation: fadeInUp 0.8s ease 0.25s both; }
-    .story-card {
-      background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 20px;
-      padding: 40px 48px; backdrop-filter: blur(10px); position: relative; overflow: hidden;
+    /* Story (collapsible) */
+    .story { margin-bottom: 48px; animation: fadeInUp 0.8s ease 0.25s both; }
+    .story details {
+      background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px;
+      backdrop-filter: blur(10px); overflow: hidden;
     }
-    .story-card::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--blue-west), var(--accent), var(--red-russia));
+    .story summary {
+      padding: 14px 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; font-size: 0.9rem; font-weight: 500; color: var(--text-secondary);
+      list-style: none; user-select: none; transition: color 0.2s;
     }
+    .story summary::-webkit-details-marker { display: none; }
+    .story summary::before {
+      content: ''; width: 40px; height: 2px;
+      background: linear-gradient(90deg, var(--blue-west), var(--accent)); border-radius: 1px;
+    }
+    .story summary::after {
+      content: ''; width: 40px; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--red-russia)); border-radius: 1px;
+    }
+    .story summary:hover { color: var(--text-primary); }
+    .story details[open] summary { border-bottom: 1px solid var(--border-glass); }
+    .story-content { padding: 28px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px 32px; }
+    .story-left { display: flex; flex-direction: column; gap: 16px; }
+    .story-right { display: flex; flex-direction: column; gap: 14px; }
     .story-opener {
-      font-size: 1.2rem; color: var(--text-primary); font-weight: 500; line-height: 1.8;
-      margin-bottom: 28px; max-width: 800px;
+      font-size: 1rem; color: var(--text-primary); font-weight: 500; line-height: 1.7;
     }
-    .story-opener .highlight {
-      color: var(--accent); font-weight: 600;
-    }
+    .story-opener .highlight { color: var(--accent); font-weight: 600; }
     .story-tweet {
       background: rgba(139, 92, 246, 0.06); border: 1px solid rgba(139, 92, 246, 0.15);
-      border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; max-width: 700px;
-      font-style: italic; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;
-      position: relative; padding-left: 40px;
+      border-radius: 10px; padding: 14px 18px 14px 32px;
+      font-style: italic; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7;
+      position: relative;
     }
     .story-tweet::before {
-      content: '\201C'; position: absolute; left: 14px; top: 8px;
-      font-size: 2.5rem; color: var(--accent); font-style: normal; line-height: 1;
+      content: '\201C'; position: absolute; left: 10px; top: 4px;
+      font-size: 1.8rem; color: var(--accent); font-style: normal; line-height: 1;
     }
     .story-body p {
-      color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75; margin-bottom: 16px; max-width: 800px;
+      color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7; margin-bottom: 0;
     }
     .story-body strong { color: var(--text-primary); font-weight: 600; }
     .story-body .inline-tag {
-      display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
+      display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.78rem; font-weight: 600;
     }
     .story-body .inline-tag.blue { background: rgba(59,130,246,0.15); color: var(--blue-west); }
     .story-body .inline-tag.red { background: rgba(239,68,68,0.15); color: var(--red-russia); }
     .story-authors {
-      display: flex; gap: 16px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-glass);
+      grid-column: 1 / -1; display: flex; gap: 12px; padding-top: 16px; border-top: 1px solid var(--border-glass);
     }
     .story-author {
-      display: flex; align-items: center; gap: 10px; padding: 8px 16px;
-      background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 10px;
+      display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 8px;
     }
     .story-author-icon {
-      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.85rem; color: white;
+      width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.7rem; color: white;
     }
-    .story-author-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
-    .story-author-handle { font-size: 0.75rem; color: var(--text-muted); }
+    .story-author-name { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+    .story-author-handle { font-size: 0.7rem; color: var(--text-muted); }
+    .story-author-handle a { color: var(--text-muted); text-decoration: none; }
+    .story-author-handle a:hover { color: var(--accent); }
+    @media (max-width: 768px) { .story-content { grid-template-columns: 1fr; } }
 
     /* Methodology */
     .methodology { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px; padding: 32px; }
@@ -284,59 +299,62 @@
       </p>
     </section>
 
-    <!-- Origin Story -->
+    <!-- Origin Story (collapsible) -->
     <div class="story animate-on-scroll">
-      <div class="story-card">
-        <div class="story-opener">
-          In 2018, <span class="highlight">Simon Roth</span> and <span class="highlight">Fabio Votta</span> stumbled upon a tweet with a pretty bold claim:
-        </div>
-        <div class="story-tweet">
-          Regimes aligned with the West are more likely to restrain themselves
-          when it comes to repressive measures, while countries aligned with
-          Russia are more likely to commit violence against their own population
-          because they don't have to fear losing their support.
-        </div>
-        <div class="story-body">
-          <p>
-            We couldn't agree more that political science makes such claims testable.
-            And so <strong>a challenge was born</strong>: find out what the data actually says.
-          </p>
-          <p>
-            The first big question was: <strong>how do you measure alignment over time?</strong>
-            Official alliances? Trade value? Both seemed too noisy. We ended up scraping
-            the military trade register from the
-            <strong>Stockholm International Peace Research Institute (SIPRI)</strong>
-            and using arms transfers as a proxy for alignment. The logic: the more a major power
-            exports weapons to a country, the more likely that buyer is aligned with the seller.
-          </p>
-          <p>
-            It sounds messy, but in practice it holds up remarkably well.
-            Post-Mossadegh Iran until 1979 shows up as firmly
-            <span class="inline-tag blue">Western-aligned</span>, with
-            massive US arms flows. After the revolution, it flips to
-            <span class="inline-tag red">Russia/China-aligned</span> as
-            Soviet and Chinese weapons pour in. Egypt switches alignment
-            in the late 1970s following Camp David. Cuba flips in 1960.
-          </p>
-          <p>
-            Now, nearly a decade later, we've rebuilt the analysis from scratch
-            with <strong>V-Dem v15 (2024)</strong> and the latest
-            <strong>SIPRI data through 2025</strong>, using a proper 5-year rolling
-            window with category-weighted trade counts and much stricter classification
-            thresholds. What you see below is the result.
-          </p>
-        </div>
-        <div class="story-authors">
-          <div class="story-author">
-            <div class="story-author-icon" style="background: linear-gradient(135deg, var(--accent), var(--blue-west));">FV</div>
-            <div><div class="story-author-name">Fabio Votta</div><div class="story-author-handle"><a href="https://github.com/favstats" target="_blank" style="color:var(--text-muted);text-decoration:none;">@favstats</a></div></div>
+      <details>
+        <summary>Read the backstory</summary>
+        <div class="story-content">
+          <div class="story-left">
+            <div class="story-opener">
+              In 2018, <span class="highlight">Simon Roth</span> and <span class="highlight">Fabio Votta</span> stumbled upon a tweet with a pretty bold claim:
+            </div>
+            <div class="story-tweet">
+              Regimes aligned with the West are more likely to restrain themselves
+              when it comes to repressive measures, while countries aligned with
+              Russia are more likely to commit violence against their own population
+              because they don't have to fear losing their support.
+            </div>
+            <div class="story-body">
+              <p>
+                We couldn't agree more that political science makes such claims testable.
+                And so <strong>a challenge was born</strong>: find out what the data actually says.
+              </p>
+            </div>
           </div>
-          <div class="story-author">
-            <div class="story-author-icon" style="background: linear-gradient(135deg, var(--red-russia), var(--accent));">SR</div>
-            <div><div class="story-author-name">Simon Roth</div><div class="story-author-handle"><a href="https://github.com/systats" target="_blank" style="color:var(--text-muted);text-decoration:none;">@systats</a></div></div>
+          <div class="story-right">
+            <div class="story-body">
+              <p>
+                The first big question: <strong>how do you measure alignment over time?</strong>
+                We scraped the military trade register from
+                <strong>SIPRI</strong> and used arms transfers as a proxy. The more a major
+                power exports weapons to a country, the more likely that buyer is aligned with the seller.
+              </p>
+              <p>
+                It holds up well. Pre-1979 Iran shows up as
+                <span class="inline-tag blue">Western-aligned</span> with massive US arms flows.
+                After the revolution, it flips to
+                <span class="inline-tag red">Russia/China-aligned</span>.
+                Egypt switches after Camp David. Cuba flips in 1960.
+              </p>
+              <p>
+                Now we've rebuilt from scratch with <strong>V-Dem v15 (2024)</strong> and
+                <strong>SIPRI data through 2025</strong>, using a 5-year rolling window with
+                category-weighted trade counts and stricter thresholds.
+              </p>
+            </div>
+          </div>
+          <div class="story-authors">
+            <div class="story-author">
+              <div class="story-author-icon" style="background: linear-gradient(135deg, var(--accent), var(--blue-west));">FV</div>
+              <div><div class="story-author-name">Fabio Votta</div><div class="story-author-handle"><a href="https://github.com/favstats">@favstats</a></div></div>
+            </div>
+            <div class="story-author">
+              <div class="story-author-icon" style="background: linear-gradient(135deg, var(--red-russia), var(--accent));">SR</div>
+              <div><div class="story-author-name">Simon Roth</div><div class="story-author-handle"><a href="https://github.com/systats">@systats</a></div></div>
+            </div>
           </div>
         </div>
-      </div>
+      </details>
     </div>
 
     <div class="stats-row" id="stats-row">
