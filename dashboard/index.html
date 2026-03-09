@@ -188,6 +188,56 @@
     .era-card .era-val { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; }
     .era-card .era-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 
+    /* Story */
+    .story { margin-bottom: 56px; animation: fadeInUp 0.8s ease 0.25s both; }
+    .story-card {
+      background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 20px;
+      padding: 40px 48px; backdrop-filter: blur(10px); position: relative; overflow: hidden;
+    }
+    .story-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--blue-west), var(--accent), var(--red-russia));
+    }
+    .story-opener {
+      font-size: 1.2rem; color: var(--text-primary); font-weight: 500; line-height: 1.8;
+      margin-bottom: 28px; max-width: 800px;
+    }
+    .story-opener .highlight {
+      color: var(--accent); font-weight: 600;
+    }
+    .story-tweet {
+      background: rgba(139, 92, 246, 0.06); border: 1px solid rgba(139, 92, 246, 0.15);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; max-width: 700px;
+      font-style: italic; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;
+      position: relative; padding-left: 40px;
+    }
+    .story-tweet::before {
+      content: '\201C'; position: absolute; left: 14px; top: 8px;
+      font-size: 2.5rem; color: var(--accent); font-style: normal; line-height: 1;
+    }
+    .story-body p {
+      color: var(--text-secondary); font-size: 0.95rem; line-height: 1.75; margin-bottom: 16px; max-width: 800px;
+    }
+    .story-body strong { color: var(--text-primary); font-weight: 600; }
+    .story-body .inline-tag {
+      display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 600;
+    }
+    .story-body .inline-tag.blue { background: rgba(59,130,246,0.15); color: var(--blue-west); }
+    .story-body .inline-tag.red { background: rgba(239,68,68,0.15); color: var(--red-russia); }
+    .story-authors {
+      display: flex; gap: 16px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-glass);
+    }
+    .story-author {
+      display: flex; align-items: center; gap: 10px; padding: 8px 16px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass); border-radius: 10px;
+    }
+    .story-author-icon {
+      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; color: white;
+    }
+    .story-author-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+    .story-author-handle { font-size: 0.75rem; color: var(--text-muted); }
+
     /* Methodology */
     .methodology { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px; padding: 32px; }
     .methodology h3 { font-size: 1.1rem; margin-bottom: 12px; }
@@ -230,15 +280,70 @@
       <h1><span class="gradient-text">Politicide</span> by Alignment</h1>
       <p class="subtitle">
         Do regimes aligned with the West show more restraint in political violence
-        than those aligned with Russia? Exploring arms trade alignment and state repression (1950&ndash;2024).
+        than those aligned with Russia and China? Exploring arms trade alignment and state repression (1950&ndash;2024).
       </p>
     </section>
+
+    <!-- Origin Story -->
+    <div class="story animate-on-scroll">
+      <div class="story-card">
+        <div class="story-opener">
+          In 2016, <span class="highlight">@systats</span> and I stumbled upon a tweet with a pretty bold claim:
+        </div>
+        <div class="story-tweet">
+          Regimes aligned with the West are more likely to restrain themselves
+          when it comes to repressive measures, while countries aligned with
+          Russia are more likely to commit violence against their own population
+          because they don't have to fear losing their support.
+        </div>
+        <div class="story-body">
+          <p>
+            We couldn't agree more that political science makes such claims testable.
+            And so <strong>a challenge was born</strong>: find out what the data actually says.
+          </p>
+          <p>
+            The first big question was: <strong>how do you measure alignment over time?</strong>
+            Official alliances? Trade value? Both seemed too noisy. We ended up scraping
+            the military trade register from the
+            <strong>Stockholm International Peace Research Institute (SIPRI)</strong>
+            and using arms transfers as a proxy for alignment. The logic: the more a major power
+            exports weapons to a country, the more likely that buyer is aligned with the seller.
+          </p>
+          <p>
+            It sounds messy, but in practice it holds up remarkably well.
+            Post-Mossadegh Iran until 1979 shows up as firmly
+            <span class="inline-tag blue">Western-aligned</span>, with
+            massive US arms flows. After the revolution, it flips to
+            <span class="inline-tag red">Russia/China-aligned</span> as
+            Soviet and Chinese weapons pour in. Egypt switches alignment
+            in the late 1970s following Camp David. Cuba flips in 1960.
+          </p>
+          <p>
+            Now, nearly a decade later, we've rebuilt the analysis from scratch
+            with <strong>V-Dem v15 (2024)</strong> and the latest
+            <strong>SIPRI data through 2025</strong>, using a proper 5-year rolling
+            window with category-weighted trade counts and much stricter classification
+            thresholds. What you see below is the result.
+          </p>
+        </div>
+        <div class="story-authors">
+          <div class="story-author">
+            <div class="story-author-icon" style="background: linear-gradient(135deg, var(--accent), var(--blue-west));">FV</div>
+            <div><div class="story-author-name">Fabio Votta</div><div class="story-author-handle">@favstats</div></div>
+          </div>
+          <div class="story-author">
+            <div class="story-author-icon" style="background: linear-gradient(135deg, var(--red-russia), var(--accent));">SR</div>
+            <div><div class="story-author-name">Simon Roth</div><div class="story-author-handle">@systats</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="stats-row" id="stats-row">
       <div class="stat-card"><div class="stat-value purple" id="stat-countries">--</div><div class="stat-label">Countries Analyzed</div></div>
       <div class="stat-card"><div class="stat-value gold" id="stat-observations">--</div><div class="stat-label">Country-Year Obs.</div></div>
       <div class="stat-card"><div class="stat-value blue" id="stat-western">--</div><div class="stat-label">Western-Aligned</div></div>
-      <div class="stat-card"><div class="stat-value red" id="stat-russian">--</div><div class="stat-label">Russia-Aligned</div></div>
+      <div class="stat-card"><div class="stat-value red" id="stat-russian">--</div><div class="stat-label">Russia/China-Aligned</div></div>
     </div>
 
     <!-- 01: World Map -->
@@ -275,7 +380,7 @@
       <div class="section-header"><span class="section-number">02</span><h2>The Key Finding</h2></div>
       <p class="description" id="finding-desc">
         Across thousands of country-year observations, Western-aligned regimes consistently show
-        significantly less state repression than Russia-aligned regimes.
+        significantly less state repression than Russia/China-aligned regimes.
       </p>
       <div class="comparison-grid">
         <div class="comparison-card" style="border-top: 3px solid var(--blue-west);">
@@ -286,7 +391,7 @@
         </div>
         <div class="vs-badge">vs</div>
         <div class="comparison-card" style="border-top: 3px solid var(--red-russia);">
-          <h3 style="color: var(--red-russia);">Russia-Aligned</h3>
+          <h3 style="color: var(--red-russia);">Russia/China-Aligned</h3>
           <div class="big-number" style="color: var(--red-russia);" id="mean-russia">--</div>
           <div class="detail">Mean Freedom from Political Killings</div>
           <div class="detail" id="detail-russia" style="margin-top: 8px;"></div>
@@ -300,7 +405,7 @@
       <p class="description">
         Each dot is a country-year.
         <span style="color: var(--blue-west);">Blue = Western-aligned</span>,
-        <span style="color: var(--red-russia);">Red = Russia-aligned</span>.
+        <span style="color: var(--red-russia);">Red = Russia/China-aligned</span>.
         Switch measures below. Hover for details.
       </p>
       <div class="var-selector" id="scatter-var-selector">
@@ -321,7 +426,7 @@
     <section class="section animate-on-scroll" id="gap-section">
       <div class="section-header"><span class="section-number">04</span><h2>The Repression Gap Over Time</h2></div>
       <p class="description">
-        The shaded area shows the gap between Western and Russia-aligned regimes (3-year rolling average).
+        The shaded area shows the gap between Western and Russia/China-aligned regimes (3-year rolling average).
         A wider gap means more divergence in political violence levels.
       </p>
       <div class="var-selector" id="gap-var-selector">
@@ -366,7 +471,7 @@
     <section class="section animate-on-scroll" id="casestudy-section">
       <div class="section-header"><span class="section-number">08</span><h2>Country Alignment Histories</h2></div>
       <p class="description">
-        Track how individual countries shifted between Western and Russia-aligned arms suppliers over time.
+        Track how individual countries shifted between Western and Russia/China-aligned arms suppliers over time.
         The line shows the continuous alignment score; shaded regions show classified alignment periods.
       </p>
       <div class="var-selector" id="country-selector">
@@ -395,12 +500,12 @@
       <div class="methodology">
         <h3>Data Sources</h3>
         <p>
-          <span class="tag purple">V-Dem v15</span> Varieties of Democracy (2024) &mdash;
+          <span class="tag purple">V-Dem v15</span> Varieties of Democracy (2024).
           8 repression measures: political killings, torture, physical violence, civil liberties,
           rule of law, media censorship, journalist harassment, freedom of expression.
         </p>
         <p>
-          <span class="tag purple">SIPRI</span> Arms Transfers Database (through 2025) &mdash;
+          <span class="tag purple">SIPRI</span> Arms Transfers Database (through 2025).
           29,917 trade records from Western countries and Russia/Soviet Union/China.
         </p>
         <h3 style="margin-top: 20px;">Alignment Classification</h3>
@@ -411,7 +516,7 @@
         </p>
         <p>
           A country-year is <span class="tag blue">Western-aligned</span> if &ge;70% of weighted trades come
-          from the West, or <span class="tag red">Russia-aligned</span> if &ge;70% come from Russia/China.
+          from the West, or <span class="tag red">Russia/China-aligned</span> if &ge;70% come from Russia/China.
           Minimum 5 raw trades in the 5-year window required. The map uses a continuous score:
           <code style="color:var(--gold)">(w_west &minus; w_russia) / w_total</code>.
           Time series use a 3-year rolling average for smoothness.
@@ -511,7 +616,7 @@
       document.getElementById('detail-west').textContent = `${w.length} obs, ${new Set(w.map(d=>d.cname)).size} countries`;
       document.getElementById('detail-russia').textContent = `${r.length} obs, ${new Set(r.map(d=>d.cname)).size} countries`;
       document.getElementById('finding-desc').textContent =
-        `Across ${summaryStats.total_country_years.toLocaleString()} country-year observations (${summaryStats.year_range[0]}–${summaryStats.year_range[1]}), Western-aligned regimes consistently show significantly less state repression than Russia-aligned regimes.`;
+        `Across ${summaryStats.total_country_years.toLocaleString()} country-year observations (${summaryStats.year_range[0]}–${summaryStats.year_range[1]}), Western-aligned regimes consistently show significantly less state repression than Russia/China-aligned regimes.`;
     }
 
     // ============================================================
@@ -609,7 +714,7 @@
           legend.children[0].textContent = 'More Violence'; legend.children[2].textContent = 'Less Violence';
           grad.style.background = 'linear-gradient(90deg, #d73027, #fee08b, #1a9850)';
         } else {
-          legend.children[0].textContent = 'Russia-Aligned'; legend.children[2].textContent = 'Western-Aligned';
+          legend.children[0].textContent = 'Russia/China-Aligned'; legend.children[2].textContent = 'Western-Aligned';
           grad.style.background = 'linear-gradient(90deg, #dc2626, #2a2a3a, #2563eb)';
         }
         window._mapUpdate?.(currentYear);
@@ -707,7 +812,7 @@
 
         // Legend
         ctx.textAlign = 'left'; ctx.font = '12px Inter';
-        [{color: WEST_COLOR, label: 'Western-Aligned', y: 8}, {color: RUSS_COLOR, label: 'Russia-Aligned', y: 26}].forEach(({color, label: lbl, y}) => {
+        [{color: WEST_COLOR, label: 'Western-Aligned', y: 8}, {color: RUSS_COLOR, label: 'Russia/China-Aligned', y: 26}].forEach(({color, label: lbl, y}) => {
           ctx.beginPath(); ctx.arc(8, y, 5, 0, Math.PI*2); ctx.fillStyle = color+'99'; ctx.fill();
           ctx.fillStyle = '#8b95b0'; ctx.fillText(lbl, 18, y + 4);
         });
@@ -1026,7 +1131,7 @@
         g.append('text').attr('x', width - 4).attr('y', 16).attr('text-anchor', 'end')
           .attr('fill', WEST_COLOR).attr('opacity', 0.5).attr('font-size', '11px').attr('font-weight', 600).text('Western-aligned');
         g.append('text').attr('x', width - 4).attr('y', height - 6).attr('text-anchor', 'end')
-          .attr('fill', RUSS_COLOR).attr('opacity', 0.5).attr('font-size', '11px').attr('font-weight', 600).text('Russia-aligned');
+          .attr('fill', RUSS_COLOR).attr('opacity', 0.5).attr('font-size', '11px').attr('font-weight', 600).text('Russia/China-aligned');
 
         // Shaded areas for classified periods
         data.forEach((d, i) => {
