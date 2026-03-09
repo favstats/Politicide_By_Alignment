@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Politicide by Alignment | Arms Trade & State Violence</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://d3js.org/topojson.v3.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.8);
+      --bg-glass: rgba(255, 255, 255, 0.03);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --text-primary: #f0f4ff;
+      --text-secondary: #8b95b0;
+      --text-muted: #4a5568;
+      --blue-west: #3b82f6;
+      --blue-west-light: #60a5fa;
+      --red-russia: #ef4444;
+      --red-russia-light: #f87171;
+      --accent: #8b5cf6;
+      --accent-glow: rgba(139, 92, 246, 0.3);
+      --gold: #f59e0b;
+      --success: #10b981;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    .bg-effects {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+    .bg-effects .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(100px);
+      animation: float 20s ease-in-out infinite;
+    }
+    .bg-effects .orb-1 { width: 600px; height: 600px; background: rgba(59, 130, 246, 0.07); top: -200px; left: -100px; }
+    .bg-effects .orb-2 { width: 500px; height: 500px; background: rgba(239, 68, 68, 0.05); bottom: -200px; right: -100px; animation-delay: -7s; }
+    .bg-effects .orb-3 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.05); top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -14s; }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 24px; }
+
+    .hero { text-align: center; padding: 80px 0 40px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px;
+      border-radius: 999px; background: var(--bg-glass); border: 1px solid var(--border-glass);
+      font-size: 13px; color: var(--text-secondary); margin-bottom: 24px;
+      animation: fadeInDown 0.8s ease;
+    }
+    .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } }
+    .hero h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 16px; animation: fadeInUp 0.8s ease 0.1s both; }
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--blue-west), var(--accent), var(--red-russia));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero .subtitle { font-size: 1.15rem; color: var(--text-secondary); max-width: 720px; margin: 0 auto 32px; font-weight: 400; animation: fadeInUp 0.8s ease 0.2s both; }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 48px; animation: fadeInUp 0.8s ease 0.3s both; }
+    .stat-card {
+      background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px;
+      padding: 24px; text-align: center; backdrop-filter: blur(10px); transition: all 0.3s ease;
+    }
+    .stat-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .stat-value { font-size: 2.2rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px; }
+    .stat-value.blue { color: var(--blue-west); }
+    .stat-value.red { color: var(--red-russia); }
+    .stat-value.purple { color: var(--accent); }
+    .stat-value.gold { color: var(--gold); }
+    .stat-label { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+
+    .section { margin-bottom: 64px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .section-number { font-size: 0.75rem; font-weight: 700; color: var(--accent); background: rgba(139, 92, 246, 0.1); padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; }
+    .section h2 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+    .section .description { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 24px; max-width: 800px; }
+
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border-glass); border-radius: 20px;
+      padding: 32px; backdrop-filter: blur(10px); position: relative; overflow: hidden;
+    }
+    .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); }
+
+    /* Map */
+    .map-controls { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+    .year-display { font-family: 'JetBrains Mono', monospace; font-size: 3rem; font-weight: 800; color: var(--text-primary); opacity: 0.9; min-width: 120px; }
+    .play-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent);
+      background: rgba(139, 92, 246, 0.1); color: var(--accent); cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.3s ease;
+    }
+    .play-btn:hover { background: var(--accent); color: white; box-shadow: 0 0 20px var(--accent-glow); }
+    .year-slider { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); outline: none; }
+    .year-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 0 10px var(--accent-glow); }
+    .speed-btn { padding: 4px 12px; border-radius: 8px; border: 1px solid var(--border-glass); background: var(--bg-glass); color: var(--text-secondary); cursor: pointer; font-size: 12px; font-family: 'JetBrains Mono', monospace; transition: all 0.2s; }
+    .speed-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .country-path { stroke: rgba(255,255,255,0.08); stroke-width: 0.5; transition: fill 0.3s ease; cursor: pointer; }
+    .country-path:hover { stroke: rgba(255,255,255,0.3); stroke-width: 1.5; filter: brightness(1.3); }
+    .map-legend { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 16px; font-size: 0.85rem; color: var(--text-secondary); }
+    .legend-gradient { width: 200px; height: 12px; border-radius: 6px; }
+    .map-mode-toggle { display: flex; gap: 4px; padding: 4px; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 10px; }
+    .map-mode-btn { padding: 6px 14px; border-radius: 7px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .map-mode-btn.active { background: var(--accent); color: white; }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute; padding: 12px 16px; background: rgba(17, 24, 39, 0.95);
+      border: 1px solid var(--border-glass); border-radius: 12px; font-size: 13px;
+      pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 10;
+      backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); max-width: 280px;
+    }
+    .tooltip .tt-country { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; color: var(--text-secondary); }
+    .tooltip .tt-value { color: var(--text-primary); font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+
+    /* Canvas scatter */
+    .canvas-container { position: relative; }
+    .canvas-container canvas { display: block; width: 100%; }
+
+    /* Var selector */
+    .var-selector { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 12px; margin-bottom: 20px; width: fit-content; }
+    .var-btn { padding: 6px 14px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; transition: all 0.2s; white-space: nowrap; }
+    .var-btn.active { background: var(--accent); color: white; }
+    .var-btn:hover:not(.active) { background: rgba(139, 92, 246, 0.1); color: var(--text-primary); }
+
+    /* Dumbbell chart */
+    .dumbbell-row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .dumbbell-row:last-child { border-bottom: none; }
+    .dumbbell-label { width: 160px; font-size: 0.9rem; color: var(--text-secondary); font-weight: 500; flex-shrink: 0; }
+    .dumbbell-bar { flex: 1; height: 40px; position: relative; }
+    .dumbbell-vals { display: flex; gap: 8px; width: 120px; justify-content: flex-end; flex-shrink: 0; }
+    .dumbbell-val { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; }
+
+    /* Big gap display */
+    .gap-hero { text-align: center; padding: 40px 0; }
+    .gap-number { font-family: 'JetBrains Mono', monospace; font-size: 6rem; font-weight: 900; line-height: 1; }
+    .gap-label { font-size: 1.1rem; color: var(--text-secondary); margin-top: 8px; }
+
+    /* Heatmap */
+    .heatmap-grid { display: grid; gap: 3px; }
+    .heatmap-cell {
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;
+      transition: all 0.2s; cursor: default; min-height: 44px;
+    }
+    .heatmap-cell:hover { transform: scale(1.05); z-index: 1; }
+    .heatmap-header { font-size: 0.8rem; color: var(--text-secondary); font-weight: 600; display: flex; align-items: center; justify-content: center; min-height: 44px; }
+
+    /* Comparison cards */
+    .comparison-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: center; }
+    .comparison-card {
+      background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px;
+      padding: 32px; text-align: center;
+    }
+    .comparison-card h3 { font-size: 1.1rem; margin-bottom: 4px; }
+    .comparison-card .big-number { font-size: 3.5rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; }
+    .comparison-card .detail { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+    .vs-badge { font-size: 1.5rem; font-weight: 800; color: var(--text-muted); background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; }
+
+    /* Era cards */
+    .era-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+    .era-card { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px; padding: 20px; text-align: center; transition: all 0.3s; }
+    .era-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+    .era-card .era-title { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; font-weight: 600; }
+    .era-card .era-row { display: flex; justify-content: space-around; gap: 12px; }
+    .era-card .era-val { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 800; }
+    .era-card .era-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Methodology */
+    .methodology { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 16px; padding: 32px; }
+    .methodology h3 { font-size: 1.1rem; margin-bottom: 12px; }
+    .methodology p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px; }
+    .methodology .tag { display: inline-block; padding: 2px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-right: 6px; }
+    .methodology .tag.blue { background: rgba(59,130,246,0.15); color: var(--blue-west); }
+    .methodology .tag.red { background: rgba(239,68,68,0.15); color: var(--red-russia); }
+    .methodology .tag.purple { background: rgba(139,92,246,0.15); color: var(--accent); }
+
+    footer { text-align: center; padding: 48px 0; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-glass); }
+    footer a { color: var(--accent); text-decoration: none; }
+
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-primary); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease; }
+    .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+    .loader { width: 48px; height: 48px; border: 3px solid var(--border-glass); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .animate-on-scroll { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .comparison-grid { grid-template-columns: 1fr; }
+      .era-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2rem; }
+      .year-display { font-size: 2rem; }
+      .card { padding: 20px; }
+      .dumbbell-label { width: 100px; font-size: 0.8rem; }
+      .gap-number { font-size: 3.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loading"><div class="loader"></div></div>
+  <div class="bg-effects"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+
+  <div class="container">
+    <section class="hero">
+      <div class="hero-badge"><span class="dot"></span> V-Dem v15 (2024) + SIPRI Arms Transfers (2025)</div>
+      <h1><span class="gradient-text">Politicide</span> by Alignment</h1>
+      <p class="subtitle">
+        Do regimes aligned with the West show more restraint in political violence
+        than those aligned with Russia? Exploring arms trade alignment and state repression (1950&ndash;2024).
+      </p>
+    </section>
+
+    <div class="stats-row" id="stats-row">
+      <div class="stat-card"><div class="stat-value purple" id="stat-countries">--</div><div class="stat-label">Countries Analyzed</div></div>
+      <div class="stat-card"><div class="stat-value gold" id="stat-observations">--</div><div class="stat-label">Country-Year Obs.</div></div>
+      <div class="stat-card"><div class="stat-value blue" id="stat-western">--</div><div class="stat-label">Western-Aligned</div></div>
+      <div class="stat-card"><div class="stat-value red" id="stat-russian">--</div><div class="stat-label">Russia-Aligned</div></div>
+    </div>
+
+    <!-- 01: World Map -->
+    <section class="section animate-on-scroll" id="map-section">
+      <div class="section-header"><span class="section-number">01</span><h2>Global Map</h2></div>
+      <p class="description">Explore political violence and arms trade alignment across the world. Toggle between modes and animate through time.</p>
+      <div class="card" style="position:relative;">
+        <div class="map-controls">
+          <button class="play-btn" id="play-btn" title="Play animation">&#9654;</button>
+          <span class="year-display" id="year-display">1950</span>
+          <input type="range" class="year-slider" id="year-slider" min="1950" max="2024" value="1950" step="1">
+          <div class="map-mode-toggle">
+            <button class="map-mode-btn active" data-mode="violence">Violence</button>
+            <button class="map-mode-btn" data-mode="alignment">Alignment</button>
+          </div>
+          <div style="display:flex; gap:4px;">
+            <button class="speed-btn" data-speed="500">1x</button>
+            <button class="speed-btn active" data-speed="200">2x</button>
+            <button class="speed-btn" data-speed="80">5x</button>
+          </div>
+        </div>
+        <div id="world-map"></div>
+        <div class="map-legend" id="map-legend">
+          <span>More Violence</span>
+          <div class="legend-gradient" id="legend-gradient" style="background: linear-gradient(90deg, #d73027, #fee08b, #1a9850);"></div>
+          <span>Less Violence</span>
+        </div>
+        <div class="tooltip" id="map-tooltip"></div>
+      </div>
+    </section>
+
+    <!-- 02: The Key Finding -->
+    <section class="section animate-on-scroll" id="finding-section">
+      <div class="section-header"><span class="section-number">02</span><h2>The Key Finding</h2></div>
+      <p class="description" id="finding-desc">
+        Across thousands of country-year observations, Western-aligned regimes consistently show
+        significantly less state repression than Russia-aligned regimes.
+      </p>
+      <div class="comparison-grid">
+        <div class="comparison-card" style="border-top: 3px solid var(--blue-west);">
+          <h3 style="color: var(--blue-west);">Western-Aligned</h3>
+          <div class="big-number" style="color: var(--blue-west);" id="mean-west">--</div>
+          <div class="detail">Mean Freedom from Political Killings</div>
+          <div class="detail" id="detail-west" style="margin-top: 8px;"></div>
+        </div>
+        <div class="vs-badge">vs</div>
+        <div class="comparison-card" style="border-top: 3px solid var(--red-russia);">
+          <h3 style="color: var(--red-russia);">Russia-Aligned</h3>
+          <div class="big-number" style="color: var(--red-russia);" id="mean-russia">--</div>
+          <div class="detail">Mean Freedom from Political Killings</div>
+          <div class="detail" id="detail-russia" style="margin-top: 8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03: Scatter (Canvas) -->
+    <section class="section animate-on-scroll" id="scatter-section">
+      <div class="section-header"><span class="section-number">03</span><h2>Arms Trade &amp; Repression</h2></div>
+      <p class="description">
+        Each dot is a country-year.
+        <span style="color: var(--blue-west);">Blue = Western-aligned</span>,
+        <span style="color: var(--red-russia);">Red = Russia-aligned</span>.
+        Switch measures below. Hover for details.
+      </p>
+      <div class="var-selector" id="scatter-var-selector">
+        <button class="var-btn active" data-var="pkill">Political Killings</button>
+        <button class="var-btn" data-var="v2cltort">Torture</button>
+        <button class="var-btn" data-var="v2x_clphy">Physical Violence</button>
+        <button class="var-btn" data-var="v2x_clpol">Civil Liberties</button>
+        <button class="var-btn" data-var="v2x_rule">Rule of Law</button>
+        <button class="var-btn" data-var="v2x_freexp_altinf">Free Expression</button>
+      </div>
+      <div class="card canvas-container" id="scatter-card">
+        <canvas id="scatter-canvas"></canvas>
+        <div class="tooltip" id="scatter-tooltip"></div>
+      </div>
+    </section>
+
+    <!-- 04: Gap Over Time -->
+    <section class="section animate-on-scroll" id="gap-section">
+      <div class="section-header"><span class="section-number">04</span><h2>The Repression Gap Over Time</h2></div>
+      <p class="description">
+        The shaded area shows the gap between Western and Russia-aligned regimes (3-year rolling average).
+        A wider gap means more divergence in political violence levels.
+      </p>
+      <div class="var-selector" id="gap-var-selector">
+        <button class="var-btn active" data-var="pkill">Political Killings</button>
+        <button class="var-btn" data-var="torture">Torture</button>
+        <button class="var-btn" data-var="phys_violence">Physical Violence</button>
+        <button class="var-btn" data-var="civil_lib">Civil Liberties</button>
+        <button class="var-btn" data-var="rule_of_law">Rule of Law</button>
+        <button class="var-btn" data-var="free_expression">Free Expression</button>
+      </div>
+      <div class="card"><div id="gap-chart"></div></div>
+    </section>
+
+    <!-- 05: Multi-Variable Dumbbell -->
+    <section class="section animate-on-scroll" id="dumbbell-section">
+      <div class="section-header"><span class="section-number">05</span><h2>8 Dimensions of Repression</h2></div>
+      <p class="description">
+        The gap holds across every measure of political violence, civil liberties, and media freedom.
+        Higher values mean more freedom / less repression.
+      </p>
+      <div class="card" id="dumbbell-card"></div>
+    </section>
+
+    <!-- 06: Heatmap -->
+    <section class="section animate-on-scroll" id="heatmap-section">
+      <div class="section-header"><span class="section-number">06</span><h2>Repression by Decade</h2></div>
+      <p class="description">
+        Heatmap showing mean freedom from political killings by decade.
+        Blue = more freedom, Red = more repression.
+      </p>
+      <div class="card" id="heatmap-card"></div>
+    </section>
+
+    <!-- 07: Era Comparison -->
+    <section class="section animate-on-scroll" id="era-section">
+      <div class="section-header"><span class="section-number">07</span><h2>Cold War vs. Post-Cold War</h2></div>
+      <p class="description">How has the relationship between alignment and repression changed across eras?</p>
+      <div class="era-grid" id="era-grid"></div>
+    </section>
+
+    <!-- 08: Country Case Studies -->
+    <section class="section animate-on-scroll" id="casestudy-section">
+      <div class="section-header"><span class="section-number">08</span><h2>Country Alignment Histories</h2></div>
+      <p class="description">
+        Track how individual countries shifted between Western and Russia-aligned arms suppliers over time.
+        The line shows the continuous alignment score; shaded regions show classified alignment periods.
+      </p>
+      <div class="var-selector" id="country-selector">
+        <button class="var-btn active" data-country="IRN">Iran</button>
+        <button class="var-btn" data-country="EGY">Egypt</button>
+        <button class="var-btn" data-country="IND">India</button>
+        <button class="var-btn" data-country="IRQ">Iraq</button>
+        <button class="var-btn" data-country="SYR">Syria</button>
+        <button class="var-btn" data-country="CUB">Cuba</button>
+        <button class="var-btn" data-country="LBY">Libya</button>
+        <button class="var-btn" data-country="VNM">Vietnam</button>
+      </div>
+      <div class="card"><div id="casestudy-chart"></div></div>
+    </section>
+
+    <!-- 09: Density -->
+    <section class="section animate-on-scroll" id="density-section">
+      <div class="section-header"><span class="section-number">09</span><h2>Distribution of Violence</h2></div>
+      <p class="description">Smoothed density curves showing the full distribution of political killing scores.</p>
+      <div class="card"><div id="density-chart"></div></div>
+    </section>
+
+    <!-- Methodology -->
+    <section class="section animate-on-scroll">
+      <div class="section-header"><span class="section-number">10</span><h2>Methodology</h2></div>
+      <div class="methodology">
+        <h3>Data Sources</h3>
+        <p>
+          <span class="tag purple">V-Dem v15</span> Varieties of Democracy (2024) &mdash;
+          8 repression measures: political killings, torture, physical violence, civil liberties,
+          rule of law, media censorship, journalist harassment, freedom of expression.
+        </p>
+        <p>
+          <span class="tag purple">SIPRI</span> Arms Transfers Database (through 2025) &mdash;
+          29,917 trade records from Western countries and Russia/Soviet Union/China.
+        </p>
+        <h3 style="margin-top: 20px;">Alignment Classification</h3>
+        <p>
+          Uses a <strong>5-year rolling window</strong> (year&minus;2 to year+2) with <strong>category-weighted</strong>
+          trade counts. Major platforms (aircraft, ships, armored vehicles, air defense) count 3&times;,
+          missiles and artillery count 2&times;, sensors and engines count 1&times;.
+        </p>
+        <p>
+          A country-year is <span class="tag blue">Western-aligned</span> if &ge;70% of weighted trades come
+          from the West, or <span class="tag red">Russia-aligned</span> if &ge;70% come from Russia/China.
+          Minimum 5 raw trades in the 5-year window required. The map uses a continuous score:
+          <code style="color:var(--gold)">(w_west &minus; w_russia) / w_total</code>.
+          Time series use a 3-year rolling average for smoothness.
+        </p>
+        <h3 style="margin-top: 20px;">Authors</h3>
+        <p>Original research by <strong>Fabio Votta</strong> and <strong>Simon Roth</strong>. Dashboard rebuilt with latest data.</p>
+      </div>
+    </section>
+  </div>
+
+  <footer><div class="container">Built with D3.js &middot; Data: V-Dem v15 &amp; SIPRI &middot; <a href="https://github.com/favstats/Politicide_By_Alignment" target="_blank">GitHub</a></div></footer>
+
+  <script>
+    // ============================================================
+    // Globals
+    // ============================================================
+    const DATA_BASE = '../data/';
+    let finalData, timeSeries, vdemMap, armsMap, summaryStats, multiVarData, eraData, decadeData, countryTimeline;
+    let worldTopo;
+    let currentYear = 1950, isPlaying = false, playInterval, playSpeed = 200, mapMode = 'violence';
+    let currentScatterVar = 'pkill';
+
+    const VAR_LABELS = {
+      pkill: 'Freedom from Political Killings',
+      v2cltort: 'Freedom from Torture',
+      v2x_clphy: 'Physical Violence Index',
+      v2x_clpol: 'Political Civil Liberties',
+      v2x_rule: 'Rule of Law Index',
+      v2mecenefm: 'Media Censorship',
+      v2meharjrn: 'Journalist Harassment',
+      v2x_freexp_altinf: 'Freedom of Expression'
+    };
+
+    const WEST_COLOR = '#3b82f6';
+    const RUSS_COLOR = '#ef4444';
+
+    async function loadData() {
+      const [fd, ts, vm, am, ss, mv, era, dec, ct, topo] = await Promise.all([
+        d3.json(DATA_BASE + 'final_data_combined.json'),
+        d3.json(DATA_BASE + 'time_series_combined.json'),
+        d3.json(DATA_BASE + 'vdem_map.json'),
+        d3.json(DATA_BASE + 'arms_map_combined.json'),
+        d3.json(DATA_BASE + 'summary_stats_combined.json'),
+        d3.json(DATA_BASE + 'multi_variable_comparison.json'),
+        d3.json(DATA_BASE + 'era_comparison.json'),
+        d3.json(DATA_BASE + 'decade_trends.json'),
+        d3.json(DATA_BASE + 'country_alignment_timeline.json'),
+        d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+      ]);
+      finalData = fd; timeSeries = ts; vdemMap = vm; armsMap = am;
+      summaryStats = ss; multiVarData = mv; eraData = era; decadeData = dec;
+      countryTimeline = ct; worldTopo = topo;
+
+      vdemMap.forEach(d => { d.year = +d.year; d.pkill = +d.pkill; });
+      armsMap.forEach(d => { d.year = +d.year; d.alignment = +d.alignment; });
+      finalData.forEach(d => {
+        d.year = +d.year; d.pkill = +d.pkill; d.perc_all = +d.perc_all;
+        ['v2cltort','v2x_clphy','v2x_clpol','v2x_rule','v2mecenefm','v2meharjrn','v2x_freexp_altinf'].forEach(v => {
+          if (d[v] != null) d[v] = +d[v];
+        });
+      });
+      timeSeries.forEach(d => {
+        d.year = +d.year; d.mean_pkill = +d.mean_pkill; d.n = +d.n;
+        // Parse smoothed fields
+        ['smooth_pkill','smooth_phys_violence','smooth_civil_lib','smooth_rule_of_law','smooth_free_expression','smooth_torture',
+         'mean_torture','mean_phys_violence','mean_civil_lib','mean_rule_of_law','mean_free_expression','mean_censorship'].forEach(k => {
+          if (d[k] != null) d[k] = +d[k];
+        });
+      });
+      countryTimeline.forEach(d => {
+        d.year = +d.year; d.alignment = +d.alignment;
+        d.w_west = +d.w_west; d.w_russia = +d.w_russia; d.n_total_raw = +d.n_total_raw;
+      });
+    }
+
+    function animateValue(el, end, duration = 1000) {
+      const startTime = performance.now();
+      (function update(now) {
+        const p = Math.min((now - startTime) / duration, 1);
+        el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3))).toLocaleString();
+        if (p < 1) requestAnimationFrame(update);
+      })(performance.now());
+    }
+
+    // ============================================================
+    // Stats
+    // ============================================================
+    function renderStats() {
+      animateValue(document.getElementById('stat-countries'), summaryStats.n_countries);
+      animateValue(document.getElementById('stat-observations'), summaryStats.total_country_years);
+      animateValue(document.getElementById('stat-western'), summaryStats.n_western);
+      animateValue(document.getElementById('stat-russian'), summaryStats.n_russian);
+      document.getElementById('mean-west').textContent = summaryStats.mean_pkill_western.toFixed(2);
+      document.getElementById('mean-russia').textContent = summaryStats.mean_pkill_russian.toFixed(2);
+      const w = finalData.filter(d => d.affil === 'Western Countries');
+      const r = finalData.filter(d => d.affil === '(Soviet) Russia');
+      document.getElementById('detail-west').textContent = `${w.length} obs, ${new Set(w.map(d=>d.cname)).size} countries`;
+      document.getElementById('detail-russia').textContent = `${r.length} obs, ${new Set(r.map(d=>d.cname)).size} countries`;
+      document.getElementById('finding-desc').textContent =
+        `Across ${summaryStats.total_country_years.toLocaleString()} country-year observations (${summaryStats.year_range[0]}–${summaryStats.year_range[1]}), Western-aligned regimes consistently show significantly less state repression than Russia-aligned regimes.`;
+    }
+
+    // ============================================================
+    // World Map
+    // ============================================================
+    function renderMap() {
+      const container = document.getElementById('world-map');
+      const width = container.clientWidth;
+      const height = Math.min(width * 0.52, 550);
+
+      const svg = d3.select('#world-map').append('svg').attr('width', width).attr('height', height).attr('viewBox', `0 0 ${width} ${height}`);
+      const projection = d3.geoNaturalEarth1()
+        .fitSize([width - 20, height - 20], topojson.feature(worldTopo, worldTopo.objects.countries))
+        .translate([width / 2, height / 2]);
+      const path = d3.geoPath(projection);
+      const countries = topojson.feature(worldTopo, worldTopo.objects.countries).features;
+      const colorV = d3.scaleSequential().domain([-3, 3]).interpolator(d3.interpolateRdYlGn);
+      const colorA = d3.scaleLinear().domain([-1, -0.3, 0, 0.3, 1]).range(['#dc2626', '#7f1d1d', '#2a2a3a', '#1e3a5f', '#2563eb']).clamp(true);
+      const isoMap = buildIsoNumericMap();
+      const tooltip = document.getElementById('map-tooltip');
+
+      const countryPaths = svg.append('g').selectAll('path').data(countries).join('path')
+        .attr('class', 'country-path').attr('d', path).attr('fill', '#1a1f2e')
+        .on('mousemove', function(event, d) {
+          const iso = isoMap[d.id]; if (!iso) return;
+          const yd = mapMode === 'violence'
+            ? vdemMap.find(r => r.iso3 === iso && r.year === currentYear)
+            : armsMap.find(r => r.iso3 === iso && r.year === currentYear);
+          if (!yd) { tooltip.style.opacity = 0; return; }
+          const val = mapMode === 'violence' ? yd.pkill.toFixed(2) : yd.alignment.toFixed(2);
+          const label = mapMode === 'violence' ? 'Violence Score' : 'Alignment';
+          tooltip.innerHTML = `<div class="tt-country">${yd.cname || iso}</div><div class="tt-row"><span>${label}</span><span class="tt-value">${val}</span></div><div class="tt-row"><span>Year</span><span class="tt-value">${currentYear}</span></div>`;
+          const rect = container.parentElement.getBoundingClientRect();
+          tooltip.style.left = (event.clientX - rect.left + 12) + 'px';
+          tooltip.style.top = (event.clientY - rect.top - 12) + 'px';
+          tooltip.style.opacity = 1;
+        })
+        .on('mouseout', () => { tooltip.style.opacity = 0; });
+
+      // Seller/bloc-leader countries: always constant color on alignment map
+      const WESTERN_SELLERS = new Set(['AUS','AUT','BEL','CAN','CHE','CYP','DEU','DNK','ESP','FIN','FRA','GBR','GRC','IRL','ISL','ITA','NLD','NOR','NZL','PRT','SWE','USA','JPN','KOR','ISR','TUR','CZE','POL','HUN','ROU','BGR','SVK','SVN','HRV','EST','LVA','LTU']);
+      const RUSSIA_SELLERS = new Set(['RUS','CHN','PRK']);
+
+      window._mapUpdate = function(year) {
+        const data = mapMode === 'violence' ? vdemMap : armsMap;
+        const yd = {}; data.filter(d => d.year === year).forEach(d => { yd[d.iso3] = mapMode === 'violence' ? d.pkill : d.alignment; });
+        const cs = mapMode === 'violence' ? colorV : colorA;
+        countryPaths.transition().duration(150).attr('fill', d => {
+          const iso = isoMap[d.id]; if (!iso) return '#1a1f2e';
+          // In alignment mode: seller countries always get their bloc color
+          if (mapMode === 'alignment') {
+            if (WESTERN_SELLERS.has(iso)) return '#2563eb';
+            if (RUSSIA_SELLERS.has(iso)) return '#dc2626';
+          }
+          return yd[iso] === undefined ? '#1a1f2e' : cs(yd[iso]);
+        });
+      };
+      window._mapUpdate(1950);
+    }
+
+    function buildIsoNumericMap() {
+      return {4:'AFG',8:'ALB',12:'DZA',20:'AND',24:'AGO',28:'ATG',32:'ARG',36:'AUS',40:'AUT',44:'BHS',48:'BHR',50:'BGD',51:'ARM',52:'BRB',56:'BEL',64:'BTN',68:'BOL',70:'BIH',72:'BWA',76:'BRA',84:'BLZ',90:'SLB',96:'BRN',100:'BGR',104:'MMR',108:'BDI',112:'BLR',116:'KHM',120:'CMR',124:'CAN',132:'CPV',140:'CAF',144:'LKA',148:'TCD',152:'CHL',156:'CHN',170:'COL',174:'COM',178:'COG',180:'COD',184:'COK',188:'CRI',191:'HRV',192:'CUB',196:'CYP',203:'CZE',204:'BEN',208:'DNK',214:'DOM',218:'ECU',222:'SLV',226:'GNQ',231:'ETH',232:'ERI',233:'EST',242:'FJI',246:'FIN',250:'FRA',258:'PYF',262:'DJI',266:'GAB',268:'GEO',270:'GMB',275:'PSE',276:'DEU',288:'GHA',296:'KIR',300:'GRC',308:'GRD',320:'GTM',324:'GIN',328:'GUY',332:'HTI',340:'HND',348:'HUN',352:'ISL',356:'IND',360:'IDN',364:'IRN',368:'IRQ',372:'IRL',376:'ISR',380:'ITA',384:'CIV',388:'JAM',392:'JPN',398:'KAZ',400:'JOR',404:'KEN',408:'PRK',410:'KOR',414:'KWT',417:'KGZ',418:'LAO',422:'LBN',426:'LSO',428:'LVA',430:'LBR',434:'LBY',438:'LIE',440:'LTU',442:'LUX',450:'MDG',454:'MWI',458:'MYS',462:'MDV',466:'MLI',470:'MLT',478:'MRT',480:'MUS',484:'MEX',492:'MCO',496:'MNG',498:'MDA',499:'MNE',504:'MAR',508:'MOZ',512:'OMN',516:'NAM',520:'NRU',524:'NPL',528:'NLD',540:'NCL',548:'VUT',554:'NZL',558:'NIC',562:'NER',566:'NGA',578:'NOR',583:'FSM',585:'PLW',586:'PAK',591:'PAN',598:'PNG',600:'PRY',604:'PER',608:'PHL',616:'POL',620:'PRT',624:'GNB',626:'TLS',634:'QAT',642:'ROU',643:'RUS',646:'RWA',659:'KNA',662:'LCA',670:'VCT',674:'SMR',678:'STP',682:'SAU',686:'SEN',688:'SRB',690:'SYC',694:'SLE',702:'SGP',703:'SVK',704:'VNM',705:'SVN',706:'SOM',710:'ZAF',716:'ZWE',724:'ESP',728:'SSD',729:'SDN',740:'SUR',748:'SWZ',752:'SWE',756:'CHE',760:'SYR',762:'TJK',764:'THA',768:'TGO',776:'TON',780:'TTO',784:'ARE',788:'TUN',792:'TUR',795:'TKM',798:'TUV',800:'UGA',804:'UKR',807:'MKD',818:'EGY',826:'GBR',831:'GGY',832:'JEY',833:'IMN',834:'TZA',840:'USA',854:'BFA',858:'URY',860:'UZB',862:'VEN',882:'WSM',887:'YEM',894:'ZMB','-99':'XKX'};
+    }
+
+    function setupMapControls() {
+      const slider = document.getElementById('year-slider');
+      const yearDisplay = document.getElementById('year-display');
+      const playBtn = document.getElementById('play-btn');
+
+      slider.addEventListener('input', () => { currentYear = +slider.value; yearDisplay.textContent = currentYear; window._mapUpdate?.(currentYear); });
+
+      playBtn.addEventListener('click', () => {
+        if (isPlaying) { clearInterval(playInterval); isPlaying = false; playBtn.innerHTML = '&#9654;'; }
+        else {
+          isPlaying = true; playBtn.innerHTML = '&#9646;&#9646;';
+          if (currentYear >= +slider.max) currentYear = +slider.min;
+          playInterval = setInterval(() => {
+            currentYear++; if (currentYear > +slider.max) currentYear = +slider.min;
+            slider.value = currentYear; yearDisplay.textContent = currentYear; window._mapUpdate?.(currentYear);
+          }, playSpeed);
+        }
+      });
+
+      document.querySelectorAll('.speed-btn').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); playSpeed = +btn.dataset.speed;
+        if (isPlaying) { clearInterval(playInterval); playInterval = setInterval(() => { currentYear++; if (currentYear > +slider.max) currentYear = +slider.min; slider.value = currentYear; yearDisplay.textContent = currentYear; window._mapUpdate?.(currentYear); }, playSpeed); }
+      }));
+
+      document.querySelectorAll('.map-mode-btn').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('.map-mode-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); mapMode = btn.dataset.mode;
+        const legend = document.getElementById('map-legend'), grad = document.getElementById('legend-gradient');
+        if (mapMode === 'violence') {
+          legend.children[0].textContent = 'More Violence'; legend.children[2].textContent = 'Less Violence';
+          grad.style.background = 'linear-gradient(90deg, #d73027, #fee08b, #1a9850)';
+        } else {
+          legend.children[0].textContent = 'Russia-Aligned'; legend.children[2].textContent = 'Western-Aligned';
+          grad.style.background = 'linear-gradient(90deg, #dc2626, #2a2a3a, #2563eb)';
+        }
+        window._mapUpdate?.(currentYear);
+      }));
+    }
+
+    // ============================================================
+    // Canvas Scatter Plot (fast!)
+    // ============================================================
+    function renderScatter() {
+      const card = document.getElementById('scatter-card');
+      const canvas = document.getElementById('scatter-canvas');
+      const tooltip = document.getElementById('scatter-tooltip');
+      const dpr = window.devicePixelRatio || 1;
+      const margin = { top: 30, right: 20, bottom: 50, left: 60 };
+
+      function draw(varName) {
+        const cw = card.clientWidth - 64; // padding
+        const ch = Math.min(460, cw * 0.5);
+        canvas.width = cw * dpr; canvas.height = ch * dpr;
+        canvas.style.width = cw + 'px'; canvas.style.height = ch + 'px';
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const valid = finalData.filter(d => d[varName] != null && !isNaN(d[varName]));
+        const label = VAR_LABELS[varName] || varName;
+        const w = cw - margin.left - margin.right, h = ch - margin.top - margin.bottom;
+        const xScale = d3.scaleLinear().domain([1950, 2024]).range([0, w]);
+        const ext = d3.extent(valid, d => d[varName]);
+        const pad = (ext[1] - ext[0]) * 0.08 || 0.5;
+        const yScale = d3.scaleLinear().domain([ext[0] - pad, ext[1] + pad]).range([h, 0]);
+
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.save(); ctx.translate(margin.left, margin.top);
+
+        // Grid
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+        yScale.ticks(6).forEach(t => { ctx.beginPath(); ctx.moveTo(0, yScale(t)); ctx.lineTo(w, yScale(t)); ctx.stroke(); });
+
+        // LOESS trend
+        function loess(data, bw) {
+          const xs = data.map(d => d.year), ys = data.map(d => d[varName]);
+          const ux = [...new Set(xs)].sort((a,b) => a - b), result = [];
+          for (const tx of ux) {
+            const dists = xs.map(xi => Math.abs(xi - tx));
+            const sd = [...dists].sort((a,b) => a - b);
+            const maxD = sd[Math.floor(sd.length * bw)] || 1;
+            let sw = 0, swy = 0;
+            for (let i = 0; i < xs.length; i++) { const u = dists[i]/(maxD+1); const wt = u < 1 ? Math.pow(1-u*u*u,3) : 0; sw += wt; swy += wt*ys[i]; }
+            result.push({x: tx, y: sw > 0 ? swy/sw : 0});
+          }
+          return result;
+        }
+
+        const westD = valid.filter(d => d.affil === 'Western Countries').sort((a,b) => a.year - b.year);
+        const russD = valid.filter(d => d.affil === '(Soviet) Russia').sort((a,b) => a.year - b.year);
+        const westT = loess(westD, 0.35), russT = loess(russD, 0.35);
+
+        // Draw trend areas
+        [{trend: westT, color: WEST_COLOR}, {trend: russT, color: RUSS_COLOR}].forEach(({trend, color}) => {
+          if (trend.length < 2) return;
+          ctx.beginPath(); ctx.moveTo(xScale(trend[0].x), yScale(trend[0].y));
+          trend.forEach(p => ctx.lineTo(xScale(p.x), yScale(p.y)));
+          ctx.lineTo(xScale(trend[trend.length-1].x), h); ctx.lineTo(xScale(trend[0].x), h); ctx.closePath();
+          ctx.fillStyle = color + '12'; ctx.fill();
+        });
+
+        // Draw dots (fast!)
+        valid.forEach(d => {
+          const cx = xScale(d.year), cy = yScale(d[varName]);
+          const isWest = d.affil === 'Western Countries';
+          ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = isWest ? 'rgba(59,130,246,0.3)' : 'rgba(239,68,68,0.35)';
+          ctx.fill();
+        });
+
+        // Draw trend lines on top
+        [{trend: westT, color: WEST_COLOR}, {trend: russT, color: RUSS_COLOR}].forEach(({trend, color}) => {
+          if (trend.length < 2) return;
+          ctx.beginPath(); ctx.moveTo(xScale(trend[0].x), yScale(trend[0].y));
+          for (let i = 1; i < trend.length; i++) ctx.lineTo(xScale(trend[i].x), yScale(trend[i].y));
+          ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.stroke();
+        });
+
+        // Axes
+        ctx.fillStyle = '#8b95b0'; ctx.font = '12px Inter'; ctx.textAlign = 'center';
+        xScale.ticks(8).forEach(t => { ctx.fillText(t, xScale(t), h + 20); });
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        yScale.ticks(6).forEach(t => { ctx.fillText(t.toFixed(1), -8, yScale(t)); });
+
+        // Axis labels
+        ctx.textAlign = 'center'; ctx.fillStyle = '#8b95b0'; ctx.font = '13px Inter';
+        ctx.fillText('Year', w / 2, h + 40);
+        ctx.save(); ctx.rotate(-Math.PI/2); ctx.fillText(label, -h/2, -48); ctx.restore();
+
+        // Legend
+        ctx.textAlign = 'left'; ctx.font = '12px Inter';
+        [{color: WEST_COLOR, label: 'Western-Aligned', y: 8}, {color: RUSS_COLOR, label: 'Russia-Aligned', y: 26}].forEach(({color, label: lbl, y}) => {
+          ctx.beginPath(); ctx.arc(8, y, 5, 0, Math.PI*2); ctx.fillStyle = color+'99'; ctx.fill();
+          ctx.fillStyle = '#8b95b0'; ctx.fillText(lbl, 18, y + 4);
+        });
+
+        ctx.restore();
+
+        // Store scales for hover
+        canvas._scales = {xScale, yScale, varName, valid, margin, w, h, label};
+      }
+
+      // Hover handler
+      canvas.addEventListener('mousemove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left) - margin.left;
+        const my = (e.clientY - rect.top) - margin.top;
+        const s = canvas._scales; if (!s) return;
+        if (mx < 0 || mx > s.w || my < 0 || my > s.h) { tooltip.style.opacity = 0; return; }
+
+        const dataX = s.xScale.invert(mx), dataY = s.yScale.invert(my);
+        let closest = null, minDist = Infinity;
+        s.valid.forEach(d => {
+          const dx = s.xScale(d.year) - mx, dy = s.yScale(d[s.varName]) - my;
+          const dist = dx*dx + dy*dy;
+          if (dist < minDist && dist < 400) { minDist = dist; closest = d; }
+        });
+
+        if (closest) {
+          const color = closest.affil === 'Western Countries' ? WEST_COLOR : RUSS_COLOR;
+          tooltip.innerHTML = `<div class="tt-country" style="color:${color}">${closest.cname}</div>
+            <div class="tt-row"><span>Year</span><span class="tt-value">${closest.year}</span></div>
+            <div class="tt-row"><span>${s.label}</span><span class="tt-value">${closest[s.varName].toFixed(2)}</span></div>
+            <div class="tt-row"><span>Alignment</span><span class="tt-value">${closest.affil}</span></div>`;
+          const cr = card.getBoundingClientRect();
+          tooltip.style.left = (e.clientX - cr.left + 15) + 'px';
+          tooltip.style.top = (e.clientY - cr.top - 10) + 'px';
+          tooltip.style.opacity = 1;
+        } else { tooltip.style.opacity = 0; }
+      });
+      canvas.addEventListener('mouseout', () => { tooltip.style.opacity = 0; });
+
+      draw(currentScatterVar);
+      document.querySelectorAll('#scatter-var-selector .var-btn').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('#scatter-var-selector .var-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active'); currentScatterVar = btn.dataset.var; draw(currentScatterVar);
+      }));
+    }
+
+    // ============================================================
+    // Gap Over Time Chart (the money chart) - SMOOTHED, variable-switchable
+    // ============================================================
+    const GAP_VAR_MAP = {
+      pkill: { smooth: 'smooth_pkill', raw: 'mean_pkill', label: 'Freedom from Political Killings' },
+      torture: { smooth: 'smooth_torture', raw: 'mean_torture', label: 'Freedom from Torture' },
+      phys_violence: { smooth: 'smooth_phys_violence', raw: 'mean_phys_violence', label: 'Physical Violence Index' },
+      civil_lib: { smooth: 'smooth_civil_lib', raw: 'mean_civil_lib', label: 'Political Civil Liberties' },
+      rule_of_law: { smooth: 'smooth_rule_of_law', raw: 'mean_rule_of_law', label: 'Rule of Law Index' },
+      free_expression: { smooth: 'smooth_free_expression', raw: 'mean_free_expression', label: 'Freedom of Expression' }
+    };
+    let currentGapVar = 'pkill';
+
+    function renderGapChart() {
+      function drawGap(varKey) {
+        const container = document.getElementById('gap-chart');
+        container.innerHTML = '';
+
+        const info = GAP_VAR_MAP[varKey];
+        const margin = { top: 30, right: 60, bottom: 50, left: 60 };
+        const width = container.clientWidth - margin.left - margin.right;
+        const height = 380;
+
+        const svg = d3.select('#gap-chart').append('svg')
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.top + margin.bottom);
+        const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+        const westTS = timeSeries.filter(d => d.affil === 'Western Countries').sort((a,b) => a.year - b.year);
+        const russTS = timeSeries.filter(d => d.affil === '(Soviet) Russia').sort((a,b) => a.year - b.year);
+
+        // Build gap data using SMOOTHED values (fall back to raw if smooth is null)
+        const years = [...new Set([...westTS.map(d=>d.year), ...russTS.map(d=>d.year)])].sort((a,b) => a - b);
+        const westMap = {}, russMap = {};
+        westTS.forEach(d => { const v = d[info.smooth] != null ? d[info.smooth] : d[info.raw]; if (v != null) westMap[d.year] = v; });
+        russTS.forEach(d => { const v = d[info.smooth] != null ? d[info.smooth] : d[info.raw]; if (v != null) russMap[d.year] = v; });
+        const gapData = years.filter(y => westMap[y] !== undefined && russMap[y] !== undefined)
+          .map(y => ({year: y, west: westMap[y], russ: russMap[y], gap: westMap[y] - russMap[y]}));
+
+        if (gapData.length === 0) return;
+
+        const x = d3.scaleLinear().domain(d3.extent(gapData, d => d.year)).range([0, width]);
+        const allVals = gapData.flatMap(d => [d.west, d.russ]);
+        const y = d3.scaleLinear().domain([d3.min(allVals) - 0.3, d3.max(allVals) + 0.3]).range([height, 0]);
+
+        // Grid
+        g.selectAll('.g').data(y.ticks(6)).join('line').attr('x1', 0).attr('x2', width).attr('y1', d => y(d)).attr('y2', d => y(d)).attr('stroke', 'rgba(255,255,255,0.04)');
+
+        // Gap area
+        const areaGen = d3.area().x(d => x(d.year)).y0(d => y(d.russ)).y1(d => y(d.west)).curve(d3.curveCatmullRom);
+        g.append('path').datum(gapData).attr('d', areaGen).attr('fill', 'url(#gapGradient)').attr('opacity', 0.25);
+
+        // Gradient def
+        const defs = svg.append('defs');
+        const grad = defs.append('linearGradient').attr('id', 'gapGradient').attr('x1', '0').attr('y1', '1').attr('x2', '0').attr('y2', '0');
+        grad.append('stop').attr('offset', '0%').attr('stop-color', RUSS_COLOR);
+        grad.append('stop').attr('offset', '50%').attr('stop-color', '#8b5cf6');
+        grad.append('stop').attr('offset', '100%').attr('stop-color', WEST_COLOR);
+
+        // Cold War line
+        const cwX = x(1991);
+        g.append('line').attr('x1', cwX).attr('x2', cwX).attr('y1', 0).attr('y2', height)
+          .attr('stroke', 'rgba(255,255,255,0.15)').attr('stroke-dasharray', '6,4');
+        g.append('text').attr('x', cwX + 4).attr('y', 14).attr('fill', 'rgba(255,255,255,0.25)').attr('font-size', '11px').text('End of Cold War');
+
+        // Lines
+        const lineGen = d3.line().curve(d3.curveCatmullRom);
+        [{key: 'west', color: WEST_COLOR, label: 'Western'},
+         {key: 'russ', color: RUSS_COLOR, label: 'Russia'}]
+          .forEach(({key, color, label}) => {
+            const pts = gapData.map(d => [x(d.year), y(d[key])]);
+            const p = g.append('path').datum(pts).attr('d', lineGen).attr('fill', 'none')
+              .attr('stroke', color).attr('stroke-width', 2.5).attr('stroke-linecap', 'round');
+            const len = p.node().getTotalLength();
+            p.attr('stroke-dasharray', len).attr('stroke-dashoffset', len)
+              .transition().duration(2000).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
+            // End label
+            const last = gapData[gapData.length - 1];
+            g.append('text').attr('x', x(last.year) + 6).attr('y', y(last[key]) + 4)
+              .attr('fill', color).attr('font-size', '12px').attr('font-weight', 600).text(label);
+          });
+
+        // Gap annotation at 65%
+        const midYear = gapData[Math.floor(gapData.length * 0.65)];
+        if (midYear && midYear.gap > 0) {
+          const gx = x(midYear.year);
+          g.append('line').attr('x1', gx).attr('x2', gx).attr('y1', y(midYear.west)).attr('y2', y(midYear.russ))
+            .attr('stroke', '#8b5cf6').attr('stroke-width', 2).attr('stroke-dasharray', '4,3');
+          g.append('text').attr('x', gx + 6).attr('y', (y(midYear.west) + y(midYear.russ)) / 2 + 4)
+            .attr('fill', '#8b5cf6').attr('font-size', '12px').attr('font-weight', 700)
+            .text(`Gap: ${midYear.gap.toFixed(2)}`);
+        }
+
+        // Axes
+        g.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format('d')).ticks(8))
+          .attr('color', 'var(--text-muted)').selectAll('text').attr('fill', 'var(--text-secondary)');
+        g.append('g').call(d3.axisLeft(y).ticks(6)).attr('color', 'var(--text-muted)').selectAll('text').attr('fill', 'var(--text-secondary)');
+        g.append('text').attr('x', width/2).attr('y', height+42).attr('text-anchor', 'middle').attr('fill', 'var(--text-secondary)').attr('font-size', '13px').text('Year');
+        g.append('text').attr('transform', 'rotate(-90)').attr('x', -height/2).attr('y', -45).attr('text-anchor', 'middle').attr('fill', 'var(--text-secondary)').attr('font-size', '13px').text(info.label);
+      }
+
+      drawGap(currentGapVar);
+
+      // Variable selector
+      document.querySelectorAll('#gap-var-selector .var-btn').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('#gap-var-selector .var-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentGapVar = btn.dataset.var;
+        drawGap(currentGapVar);
+      }));
+    }
+
+    // ============================================================
+    // Dumbbell Chart
+    // ============================================================
+    function renderDumbbell() {
+      const card = document.getElementById('dumbbell-card');
+      const vars = [...new Set(multiVarData.map(d => d.var_label))];
+      const allVals = multiVarData.map(d => d.mean_val);
+      const absMax = Math.max(Math.abs(d3.min(allVals)), Math.abs(d3.max(allVals)));
+      const scale = d3.scaleLinear().domain([-absMax * 1.15, absMax * 1.15]).range([0, 100]);
+
+      let html = '<div style="display:flex;gap:16px;justify-content:flex-end;margin-bottom:12px;font-size:12px;">';
+      html += `<span style="color:${WEST_COLOR};">&#9679; Western</span>`;
+      html += `<span style="color:${RUSS_COLOR};">&#9679; Russia</span></div>`;
+
+      vars.forEach(v => {
+        const west = multiVarData.find(d => d.var_label === v && d.affil === 'Western Countries');
+        const russ = multiVarData.find(d => d.var_label === v && d.affil === '(Soviet) Russia');
+        if (!west || !russ) return;
+
+        const wPos = scale(west.mean_val), rPos = scale(russ.mean_val);
+        const zeroPos = scale(0);
+        const minPos = Math.min(wPos, rPos), maxPos = Math.max(wPos, rPos);
+
+        html += `<div class="dumbbell-row">
+          <div class="dumbbell-label">${v}</div>
+          <div class="dumbbell-bar">
+            <svg width="100%" height="40" viewBox="0 0 100 40" preserveAspectRatio="none">
+              <line x1="${zeroPos}" y1="0" x2="${zeroPos}" y2="40" stroke="rgba(255,255,255,0.1)" stroke-width="0.3"/>
+              <line x1="${minPos}" y1="20" x2="${maxPos}" y2="20" stroke="rgba(139,92,246,0.4)" stroke-width="2"/>
+              <circle cx="${rPos}" cy="20" r="4" fill="${RUSS_COLOR}"/>
+              <circle cx="${wPos}" cy="20" r="4" fill="${WEST_COLOR}"/>
+            </svg>
+          </div>
+          <div class="dumbbell-vals">
+            <span class="dumbbell-val" style="color:${RUSS_COLOR};">${russ.mean_val.toFixed(2)}</span>
+            <span class="dumbbell-val" style="color:${WEST_COLOR};">${west.mean_val.toFixed(2)}</span>
+          </div>
+        </div>`;
+      });
+
+      card.innerHTML = html;
+    }
+
+    // ============================================================
+    // Heatmap
+    // ============================================================
+    function renderHeatmap() {
+      const card = document.getElementById('heatmap-card');
+      if (!decadeData || decadeData.length === 0) return;
+
+      const decades = [...new Set(decadeData.map(d => d.decade))].sort();
+      const allVals = decadeData.map(d => d.mean_pkill);
+      const colorScale = d3.scaleSequential().domain([d3.min(allVals) - 0.2, d3.max(allVals) + 0.2]).interpolator(d3.interpolateRdYlGn);
+
+      const cols = decades.length + 1;
+      let html = `<div class="heatmap-grid" style="grid-template-columns: 140px repeat(${decades.length}, 1fr);">`;
+      html += '<div class="heatmap-header"></div>';
+      decades.forEach(d => { html += `<div class="heatmap-header">${d}</div>`; });
+
+      ['Western Countries', '(Soviet) Russia'].forEach(affil => {
+        const label = affil === 'Western Countries' ? 'Western' : 'Russia';
+        const color = affil === 'Western Countries' ? WEST_COLOR : RUSS_COLOR;
+        html += `<div class="heatmap-header" style="color:${color}; text-align:right; padding-right: 12px;">${label}</div>`;
+        decades.forEach(dec => {
+          const row = decadeData.find(d => d.decade === dec && d.affil === affil);
+          const val = row ? row.mean_pkill : null;
+          const bg = val !== null ? colorScale(val) : '#1a1f2e';
+          const text = val !== null ? val.toFixed(2) : '–';
+          const textColor = val !== null && val > 0.5 ? '#000' : '#fff';
+          html += `<div class="heatmap-cell" style="background:${bg}; color:${textColor};">${text}</div>`;
+        });
+      });
+
+      // Gap row
+      html += '<div class="heatmap-header" style="color:var(--accent); text-align:right; padding-right: 12px;">Gap</div>';
+      decades.forEach(dec => {
+        const w = decadeData.find(d => d.decade === dec && d.affil === 'Western Countries');
+        const r = decadeData.find(d => d.decade === dec && d.affil === '(Soviet) Russia');
+        const gap = (w && r) ? (w.mean_pkill - r.mean_pkill).toFixed(2) : '–';
+        const gapVal = (w && r) ? w.mean_pkill - r.mean_pkill : 0;
+        const intensity = Math.min(gapVal / 3, 1);
+        html += `<div class="heatmap-cell" style="background:rgba(139,92,246,${0.15 + intensity * 0.5}); color:#d8b4fe; font-weight:700;">${gap}</div>`;
+      });
+
+      html += '</div>';
+      card.innerHTML = html;
+    }
+
+    // ============================================================
+    // Era Comparison
+    // ============================================================
+    function renderEra() {
+      const grid = document.getElementById('era-grid');
+      const eras = [...new Set(eraData.map(d => d.era))];
+      eras.forEach(era => {
+        const w = eraData.find(d => d.era === era && d.affil === 'Western Countries');
+        const r = eraData.find(d => d.era === era && d.affil === '(Soviet) Russia');
+        if (!w || !r) return;
+        const card = document.createElement('div');
+        card.className = 'era-card';
+        card.innerHTML = `<div class="era-title">${era}</div>
+          <div class="era-row">
+            <div><div class="era-val" style="color:${WEST_COLOR};">${w.mean_pkill.toFixed(2)}</div><div class="era-label">Western (n=${w.n})</div></div>
+            <div><div class="era-val" style="color:${RUSS_COLOR};">${r.mean_pkill.toFixed(2)}</div><div class="era-label">Russia (n=${r.n})</div></div>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    // ============================================================
+    // Country Case Study Chart
+    // ============================================================
+    function renderCaseStudy() {
+      let currentCountry = 'IRN';
+
+      function drawCountry(iso) {
+        const container = document.getElementById('casestudy-chart');
+        container.innerHTML = '';
+
+        const data = countryTimeline.filter(d => d.iso3 === iso).sort((a,b) => a.year - b.year);
+        if (data.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-secondary); text-align:center; padding:40px;">No trade data available for this country.</p>';
+          return;
+        }
+
+        const countryName = data[0].cname || iso;
+        const margin = { top: 40, right: 30, bottom: 50, left: 60 };
+        const width = container.clientWidth - margin.left - margin.right;
+        const height = 320;
+
+        const svg = d3.select('#casestudy-chart').append('svg')
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.top + margin.bottom);
+        const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleLinear().domain(d3.extent(data, d => d.year)).range([0, width]);
+        const y = d3.scaleLinear().domain([-1.1, 1.1]).range([height, 0]);
+
+        // Title
+        svg.append('text').attr('x', margin.left).attr('y', 24)
+          .attr('fill', 'var(--text-primary)').attr('font-size', '16px').attr('font-weight', 700)
+          .text(`${countryName} — Arms Trade Alignment`);
+
+        // Grid
+        g.selectAll('.g').data([-1, -0.5, 0, 0.5, 1]).join('line')
+          .attr('x1', 0).attr('x2', width).attr('y1', d => y(d)).attr('y2', d => y(d))
+          .attr('stroke', d => d === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)')
+          .attr('stroke-width', d => d === 0 ? 1.5 : 1);
+
+        // Background shading for alignment zones
+        g.append('rect').attr('x', 0).attr('y', 0).attr('width', width).attr('height', y(0))
+          .attr('fill', WEST_COLOR).attr('opacity', 0.03);
+        g.append('rect').attr('x', 0).attr('y', y(0)).attr('width', width).attr('height', height - y(0))
+          .attr('fill', RUSS_COLOR).attr('opacity', 0.03);
+
+        // Zone labels
+        g.append('text').attr('x', width - 4).attr('y', 16).attr('text-anchor', 'end')
+          .attr('fill', WEST_COLOR).attr('opacity', 0.5).attr('font-size', '11px').attr('font-weight', 600).text('Western-aligned');
+        g.append('text').attr('x', width - 4).attr('y', height - 6).attr('text-anchor', 'end')
+          .attr('fill', RUSS_COLOR).attr('opacity', 0.5).attr('font-size', '11px').attr('font-weight', 600).text('Russia-aligned');
+
+        // Shaded areas for classified periods
+        data.forEach((d, i) => {
+          if (!d.affil) return;
+          const nextYear = i < data.length - 1 ? data[i+1].year : d.year + 1;
+          const color = d.affil === 'Western Countries' ? WEST_COLOR : RUSS_COLOR;
+          g.append('rect')
+            .attr('x', x(d.year)).attr('y', 0)
+            .attr('width', Math.max(x(nextYear) - x(d.year), 2))
+            .attr('height', height)
+            .attr('fill', color).attr('opacity', 0.07);
+        });
+
+        // Alignment line
+        const lineGen = d3.line().x(d => x(d.year)).y(d => y(d.alignment)).curve(d3.curveMonotoneX);
+        const p = g.append('path').datum(data).attr('d', lineGen)
+          .attr('fill', 'none').attr('stroke', '#e2e8f0').attr('stroke-width', 2.5).attr('stroke-linecap', 'round');
+        const len = p.node().getTotalLength();
+        p.attr('stroke-dasharray', len).attr('stroke-dashoffset', len)
+          .transition().duration(2000).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
+
+        // Dots colored by alignment
+        g.selectAll('.dot').data(data).join('circle')
+          .attr('cx', d => x(d.year)).attr('cy', d => y(d.alignment))
+          .attr('r', 3.5)
+          .attr('fill', d => {
+            if (d.alignment > 0.3) return WEST_COLOR;
+            if (d.alignment < -0.3) return RUSS_COLOR;
+            return '#8b5cf6';
+          })
+          .attr('opacity', 0.7)
+          .attr('stroke', 'rgba(0,0,0,0.3)').attr('stroke-width', 0.5);
+
+        // Threshold lines
+        [{val: 0.7, label: '70% Western threshold'}, {val: -0.7, label: '70% Russia threshold'}].forEach(({val, label}) => {
+          // Map alignment thresholds: if ratio >= 0.7, alignment = (0.7 - 0.3)/(0.7+0.3) = 0.4
+          // Actually the alignment is (w-r)/(w+r). If 70% west, alignment = (0.7-0.3)/(1) = 0.4
+          // But since we use weighted trades, the actual threshold position varies.
+          // Just show the approximate zone boundary
+          const approxAlignment = val > 0 ? 0.4 : -0.4;
+          g.append('line').attr('x1', 0).attr('x2', width)
+            .attr('y1', y(approxAlignment)).attr('y2', y(approxAlignment))
+            .attr('stroke', val > 0 ? WEST_COLOR : RUSS_COLOR)
+            .attr('stroke-width', 1).attr('stroke-dasharray', '4,4').attr('opacity', 0.3);
+        });
+
+        // Find and annotate switches
+        const switches = [];
+        for (let i = 1; i < data.length; i++) {
+          if (data[i].affil && data[i-1].affil && data[i].affil !== data[i-1].affil) {
+            switches.push(data[i]);
+          }
+        }
+        switches.forEach(s => {
+          const sx = x(s.year);
+          g.append('line').attr('x1', sx).attr('x2', sx).attr('y1', 0).attr('y2', height)
+            .attr('stroke', '#f59e0b').attr('stroke-width', 1.5).attr('stroke-dasharray', '4,3');
+          g.append('text').attr('x', sx + 4).attr('y', 32)
+            .attr('fill', '#f59e0b').attr('font-size', '11px').attr('font-weight', 600)
+            .text(s.year);
+        });
+
+        // Axes
+        g.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format('d')).ticks(8))
+          .attr('color', 'var(--text-muted)').selectAll('text').attr('fill', 'var(--text-secondary)');
+        g.append('g').call(d3.axisLeft(y).ticks(5).tickFormat(d => d === 1 ? '+1 (West)' : d === -1 ? '−1 (Russia)' : d.toFixed(1)))
+          .attr('color', 'var(--text-muted)').selectAll('text').attr('fill', 'var(--text-secondary)');
+        g.append('text').attr('x', width/2).attr('y', height+42).attr('text-anchor', 'middle').attr('fill', 'var(--text-secondary)').attr('font-size', '13px').text('Year');
+        g.append('text').attr('transform', 'rotate(-90)').attr('x', -height/2).attr('y', -45).attr('text-anchor', 'middle').attr('fill', 'var(--text-secondary)').attr('font-size', '13px').text('Alignment Score');
+      }
+
+      drawCountry(currentCountry);
+
+      document.querySelectorAll('#country-selector .var-btn').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('#country-selector .var-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCountry = btn.dataset.country;
+        drawCountry(currentCountry);
+      }));
+    }
+
+    // ============================================================
+    // Density Chart (smooth KDE)
+    // ============================================================
+    function renderDensity() {
+      const container = document.getElementById('density-chart');
+      const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+      const width = container.clientWidth - margin.left - margin.right;
+      const height = 300;
+
+      const svg = d3.select('#density-chart').append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom);
+      const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+      const westVals = finalData.filter(d => d.affil === 'Western Countries').map(d => d.pkill);
+      const russVals = finalData.filter(d => d.affil === '(Soviet) Russia').map(d => d.pkill);
+      const allVals = [...westVals, ...russVals];
+      const x = d3.scaleLinear().domain([d3.min(allVals) - 0.5, d3.max(allVals) + 0.5]).range([0, width]);
+
+      // KDE
+      function kde(values, bandwidth) {
+        const points = d3.range(x.domain()[0], x.domain()[1], (x.domain()[1] - x.domain()[0]) / 120);
+        return points.map(xp => {
+          let density = 0;
+          values.forEach(v => { const z = (xp - v) / bandwidth; density += Math.exp(-0.5 * z * z); });
+          return {x: xp, y: density / (values.length * bandwidth * Math.sqrt(2 * Math.PI))};
+        });
+      }
+
+      const westKDE = kde(westVals, 0.35);
+      const russKDE = kde(russVals, 0.35);
+      const maxY = d3.max([...westKDE, ...russKDE], d => d.y);
+      const y = d3.scaleLinear().domain([0, maxY * 1.1]).range([height, 0]);
+
+      // Areas
+      const area = d3.area().x(d => x(d.x)).y0(height).y1(d => y(d.y)).curve(d3.curveBasis);
+      const line = d3.line().x(d => x(d.x)).y(d => y(d.y)).curve(d3.curveBasis);
+
+      [{data: westKDE, color: WEST_COLOR, label: 'Western'}, {data: russKDE, color: RUSS_COLOR, label: 'Russia'}]
+        .forEach(({data, color, label}) => {
+          g.append('path').datum(data).attr('d', area).attr('fill', color).attr('opacity', 0.15);
+          const p = g.append('path').datum(data).attr('d', line).attr('fill', 'none').attr('stroke', color).attr('stroke-width', 2.5);
+          const len = p.node().getTotalLength();
+          p.attr('stroke-dasharray', len).attr('stroke-dashoffset', len).transition().duration(2000).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
+        });
+
+      // Mean lines
+      [{val: d3.mean(westVals), color: WEST_COLOR, label: 'Western'}, {val: d3.mean(russVals), color: RUSS_COLOR, label: 'Russia'}]
+        .forEach(({val, color, label}, i) => {
+          g.append('line').attr('x1', x(val)).attr('x2', x(val)).attr('y1', 0).attr('y2', height)
+            .attr('stroke', color).attr('stroke-width', 2).attr('stroke-dasharray', '6,4').attr('opacity', 0.7);
+          g.append('text').attr('x', x(val) + 4).attr('y', 14 + i * 18).attr('fill', color).attr('font-size', '12px').attr('font-weight', 600)
+            .text(`${label}: ${val.toFixed(2)}`);
+        });
+
+      g.append('g').attr('transform', `translate(0,${height})`).call(d3.axisBottom(x).ticks(8)).attr('color', 'var(--text-muted)').selectAll('text').attr('fill', 'var(--text-secondary)');
+      g.append('g').call(d3.axisLeft(y).ticks(4)).attr('color', 'var(--text-muted)').selectAll('text').attr('fill', 'var(--text-secondary)');
+      g.append('text').attr('x', width/2).attr('y', height+42).attr('text-anchor', 'middle').attr('fill', 'var(--text-secondary)').attr('font-size', '13px').text('Freedom from Political Killings Score');
+      g.append('text').attr('transform', 'rotate(-90)').attr('x', -height/2).attr('y', -45).attr('text-anchor', 'middle').attr('fill', 'var(--text-secondary)').attr('font-size', '13px').text('Density');
+    }
+
+    // ============================================================
+    // Scroll animations
+    // ============================================================
+    function setupScrollAnimations() {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+    }
+
+    // ============================================================
+    // Init
+    // ============================================================
+    async function init() {
+      try {
+        await loadData();
+        renderStats();
+        renderMap();
+        setupMapControls();
+        renderScatter();
+        renderGapChart();
+        renderDumbbell();
+        renderHeatmap();
+        renderEra();
+        renderCaseStudy();
+        renderDensity();
+        setupScrollAnimations();
+      } catch (err) {
+        console.error('Error initializing dashboard:', err);
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

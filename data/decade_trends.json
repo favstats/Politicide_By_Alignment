@@ -1,0 +1,178 @@
+[
+  {
+    "decade": "1950s",
+    "affil": "(Soviet) Russia",
+    "n": 67,
+    "mean_pkill": -0.897,
+    "mean_torture": -1.249,
+    "mean_phys_violence": 0.266,
+    "mean_civil_lib": 0.1,
+    "mean_rule_of_law": 0.426,
+    "mean_free_expression": 0.089
+  },
+  {
+    "decade": "1950s",
+    "affil": "Western Countries",
+    "n": 277,
+    "mean_pkill": -0.186,
+    "mean_torture": -0.411,
+    "mean_phys_violence": 0.433,
+    "mean_civil_lib": 0.423,
+    "mean_rule_of_law": 0.42,
+    "mean_free_expression": 0.419
+  },
+  {
+    "decade": "1960s",
+    "affil": "(Soviet) Russia",
+    "n": 141,
+    "mean_pkill": -0.311,
+    "mean_torture": -0.706,
+    "mean_phys_violence": 0.383,
+    "mean_civil_lib": 0.156,
+    "mean_rule_of_law": 0.409,
+    "mean_free_expression": 0.14
+  },
+  {
+    "decade": "1960s",
+    "affil": "Western Countries",
+    "n": 401,
+    "mean_pkill": -0.31,
+    "mean_torture": -0.554,
+    "mean_phys_violence": 0.405,
+    "mean_civil_lib": 0.369,
+    "mean_rule_of_law": 0.405,
+    "mean_free_expression": 0.368
+  },
+  {
+    "decade": "1970s",
+    "affil": "(Soviet) Russia",
+    "n": 159,
+    "mean_pkill": -0.859,
+    "mean_torture": -1.147,
+    "mean_phys_violence": 0.304,
+    "mean_civil_lib": 0.109,
+    "mean_rule_of_law": 0.321,
+    "mean_free_expression": 0.102
+  },
+  {
+    "decade": "1970s",
+    "affil": "Western Countries",
+    "n": 497,
+    "mean_pkill": -0.594,
+    "mean_torture": -0.935,
+    "mean_phys_violence": 0.345,
+    "mean_civil_lib": 0.285,
+    "mean_rule_of_law": 0.34,
+    "mean_free_expression": 0.286
+  },
+  {
+    "decade": "1980s",
+    "affil": "(Soviet) Russia",
+    "n": 183,
+    "mean_pkill": -0.612,
+    "mean_torture": -0.971,
+    "mean_phys_violence": 0.333,
+    "mean_civil_lib": 0.132,
+    "mean_rule_of_law": 0.305,
+    "mean_free_expression": 0.125
+  },
+  {
+    "decade": "1980s",
+    "affil": "Western Countries",
+    "n": 464,
+    "mean_pkill": -0.269,
+    "mean_torture": -0.763,
+    "mean_phys_violence": 0.395,
+    "mean_civil_lib": 0.348,
+    "mean_rule_of_law": 0.376,
+    "mean_free_expression": 0.345
+  },
+  {
+    "decade": "1990s",
+    "affil": "(Soviet) Russia",
+    "n": 84,
+    "mean_pkill": -0.066,
+    "mean_torture": -0.387,
+    "mean_phys_violence": 0.437,
+    "mean_civil_lib": 0.407,
+    "mean_rule_of_law": 0.337,
+    "mean_free_expression": 0.393
+  },
+  {
+    "decade": "1990s",
+    "affil": "Western Countries",
+    "n": 337,
+    "mean_pkill": 0.877,
+    "mean_torture": 0.413,
+    "mean_phys_violence": 0.621,
+    "mean_civil_lib": 0.589,
+    "mean_rule_of_law": 0.531,
+    "mean_free_expression": 0.571
+  },
+  {
+    "decade": "2000s",
+    "affil": "(Soviet) Russia",
+    "n": 69,
+    "mean_pkill": -0.522,
+    "mean_torture": -0.981,
+    "mean_phys_violence": 0.329,
+    "mean_civil_lib": 0.323,
+    "mean_rule_of_law": 0.168,
+    "mean_free_expression": 0.315
+  },
+  {
+    "decade": "2000s",
+    "affil": "Western Countries",
+    "n": 359,
+    "mean_pkill": 1.314,
+    "mean_torture": 0.781,
+    "mean_phys_violence": 0.696,
+    "mean_civil_lib": 0.698,
+    "mean_rule_of_law": 0.592,
+    "mean_free_expression": 0.684
+  },
+  {
+    "decade": "2010s",
+    "affil": "(Soviet) Russia",
+    "n": 108,
+    "mean_pkill": -0.066,
+    "mean_torture": -0.655,
+    "mean_phys_violence": 0.433,
+    "mean_civil_lib": 0.367,
+    "mean_rule_of_law": 0.254,
+    "mean_free_expression": 0.353
+  },
+  {
+    "decade": "2010s",
+    "affil": "Western Countries",
+    "n": 435,
+    "mean_pkill": 1.258,
+    "mean_torture": 0.838,
+    "mean_phys_violence": 0.701,
+    "mean_civil_lib": 0.674,
+    "mean_rule_of_law": 0.574,
+    "mean_free_expression": 0.668
+  },
+  {
+    "decade": "2020s",
+    "affil": "(Soviet) Russia",
+    "n": 42,
+    "mean_pkill": -0.271,
+    "mean_torture": -0.761,
+    "mean_phys_violence": 0.388,
+    "mean_civil_lib": 0.334,
+    "mean_rule_of_law": 0.215,
+    "mean_free_expression": 0.318
+  },
+  {
+    "decade": "2020s",
+    "affil": "Western Countries",
+    "n": 218,
+    "mean_pkill": 1.285,
+    "mean_torture": 0.841,
+    "mean_phys_violence": 0.702,
+    "mean_civil_lib": 0.644,
+    "mean_rule_of_law": 0.594,
+    "mean_free_expression": 0.631
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "region": "Caribbean",
+    "affil": "Western Countries",
+    "n": 27,
+    "mean_pkill": 0.936,
+    "mean_phys_violence": 0.793,
+    "mean_civil_lib": 0.834
+  },
+  {
+    "region": "East Asia",
+    "affil": "Western Countries",
+    "n": 72,
+    "mean_pkill": 0.952,
+    "mean_phys_violence": 0.646,
+    "mean_civil_lib": 0.492
+  },
+  {
+    "region": "Eastern Europe & Central Asia",
+    "affil": "(Soviet) Russia",
+    "n": 283,
+    "mean_pkill": 0.039,
+    "mean_phys_violence": 0.449,
+    "mean_civil_lib": 0.213
+  },
+  {
+    "region": "Eastern Europe & Central Asia",
+    "affil": "Western Countries",
+    "n": 252,
+    "mean_pkill": 2.462,
+    "mean_phys_violence": 0.88,
+    "mean_civil_lib": 0.849
+  },
+  {
+    "region": "Latin America & Caribbean",
+    "affil": "(Soviet) Russia",
+    "n": 48,
+    "mean_pkill": 1.103,
+    "mean_phys_violence": 0.598,
+    "mean_civil_lib": 0.217
+  },
+  {
+    "region": "Latin America & Caribbean",
+    "affil": "Western Countries",
+    "n": 833,
+    "mean_pkill": 0.109,
+    "mean_phys_violence": 0.501,
+    "mean_civil_lib": 0.587
+  },
+  {
+    "region": "Middle East & North Africa",
+    "affil": "(Soviet) Russia",
+    "n": 169,
+    "mean_pkill": -1.097,
+    "mean_phys_violence": 0.248,
+    "mean_civil_lib": 0.174
+  },
+  {
+    "region": "Middle East & North Africa",
+    "affil": "Western Countries",
+    "n": 705,
+    "mean_pkill": 0.466,
+    "mean_phys_violence": 0.512,
+    "mean_civil_lib": 0.283
+  },
+  {
+    "region": "South Asia",
+    "affil": "(Soviet) Russia",
+    "n": 65,
+    "mean_pkill": -0.979,
+    "mean_phys_violence": 0.28,
+    "mean_civil_lib": 0.36
+  },
+  {
+    "region": "South Asia",
+    "affil": "Western Countries",
+    "n": 105,
+    "mean_pkill": 0.039,
+    "mean_phys_violence": 0.464,
+    "mean_civil_lib": 0.586
+  },
+  {
+    "region": "South-East Asia",
+    "affil": "(Soviet) Russia",
+    "n": 125,
+    "mean_pkill": -0.565,
+    "mean_phys_violence": 0.341,
+    "mean_civil_lib": 0.125
+  },
+  {
+    "region": "South-East Asia",
+    "affil": "Western Countries",
+    "n": 386,
+    "mean_pkill": 0.334,
+    "mean_phys_violence": 0.511,
+    "mean_civil_lib": 0.462
+  },
+  {
+    "region": "Sub-Saharan Africa",
+    "affil": "(Soviet) Russia",
+    "n": 163,
+    "mean_pkill": -0.963,
+    "mean_phys_violence": 0.276,
+    "mean_civil_lib": 0.255
+  },
+  {
+    "region": "Sub-Saharan Africa",
+    "affil": "Western Countries",
+    "n": 603,
+    "mean_pkill": -0.463,
+    "mean_phys_violence": 0.392,
+    "mean_civil_lib": 0.408
+  },
+  {
+    "region": "Western Europe & North America",
+    "affil": "Western Countries",
+    "n": 5,
+    "mean_pkill": 2.251,
+    "mean_phys_violence": 0.952,
+    "mean_civil_lib": 0.914
+  }
+]

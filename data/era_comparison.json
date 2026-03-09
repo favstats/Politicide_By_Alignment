@@ -1,0 +1,74 @@
+[
+  {
+    "era": "Cold War (1950-1991)",
+    "affil": "(Soviet) Russia",
+    "n": 581,
+    "mean_pkill": -0.599,
+    "median_pkill": -0.412,
+    "sd_pkill": 1.373,
+    "mean_torture": -0.942,
+    "mean_phys_violence": 0.338,
+    "mean_civil_lib": 0.145,
+    "mean_rule_of_law": 0.353
+  },
+  {
+    "era": "Cold War (1950-1991)",
+    "affil": "Western Countries",
+    "n": 1704,
+    "mean_pkill": -0.333,
+    "median_pkill": -0.349,
+    "sd_pkill": 1.427,
+    "mean_torture": -0.675,
+    "mean_phys_violence": 0.395,
+    "mean_civil_lib": 0.353,
+    "mean_rule_of_law": 0.383
+  },
+  {
+    "era": "Post-Cold War (1992-2013)",
+    "affil": "(Soviet) Russia",
+    "n": 165,
+    "mean_pkill": -0.265,
+    "median_pkill": -0.581,
+    "sd_pkill": 1.472,
+    "mean_torture": -0.73,
+    "mean_phys_violence": 0.387,
+    "mean_civil_lib": 0.358,
+    "mean_rule_of_law": 0.239
+  },
+  {
+    "era": "Post-Cold War (1992-2013)",
+    "affil": "Western Countries",
+    "n": 794,
+    "mean_pkill": 1.197,
+    "median_pkill": 1.283,
+    "sd_pkill": 1.345,
+    "mean_torture": 0.705,
+    "mean_phys_violence": 0.68,
+    "mean_civil_lib": 0.667,
+    "mean_rule_of_law": 0.572
+  },
+  {
+    "era": "Recent (2014-2024)",
+    "affil": "(Soviet) Russia",
+    "n": 107,
+    "mean_pkill": -0.196,
+    "median_pkill": -0.304,
+    "sd_pkill": 1.529,
+    "mean_torture": -0.732,
+    "mean_phys_violence": 0.407,
+    "mean_civil_lib": 0.349,
+    "mean_rule_of_law": 0.231
+  },
+  {
+    "era": "Recent (2014-2024)",
+    "affil": "Western Countries",
+    "n": 490,
+    "mean_pkill": 1.256,
+    "median_pkill": 1.42,
+    "sd_pkill": 1.356,
+    "mean_torture": 0.822,
+    "mean_phys_violence": 0.699,
+    "mean_civil_lib": 0.652,
+    "mean_rule_of_law": 0.586
+  }
+]

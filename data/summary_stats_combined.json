@@ -1,0 +1,25 @@
+{
+  "total_country_years": 3841,
+  "year_range": [1950, 2024],
+  "n_countries": 123,
+  "n_western": 2988,
+  "n_russian": 853,
+  "mean_pkill_western": 0.33,
+  "mean_pkill_russian": -0.48,
+  "methodology": {
+    "window": "5-year rolling (year-2 to year+2)",
+    "min_trades": 5,
+    "threshold": "70% weighted ratio",
+    "weighting": "Aircraft/Ships/Armored/AirDef: 3x, Missiles/Artillery/Naval: 2x, Sensors/Engines: 1x"
+  },
+  "variables": {
+    "pkill": "Freedom from political killings (v2clkill)",
+    "torture": "Freedom from torture (v2cltort)",
+    "phys_violence": "Physical violence index (v2x_clphy)",
+    "civil_lib": "Political civil liberties (v2x_clpol)",
+    "rule_of_law": "Rule of law index (v2x_rule)",
+    "censorship": "Government censorship<e2><80><94>Media (v2mecenefm)",
+    "journalist_harassment": "Harassment of journalists (v2meharjrn)",
+    "free_expression": "Freedom of expression (v2x_freexp_altinf)"
+  }
+}
